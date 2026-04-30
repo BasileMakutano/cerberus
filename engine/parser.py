@@ -1,114 +1,69 @@
 import xml.etree.ElementTree as ET
 import pandas as pd
-import sqlite3
 import os
 import glob
 from datetime import datetime
 
+from engine.db import get_db, already_parsed, mark_parsed, BASE_DIR
 
-BASE_DIR  = os.path.expanduser("~/Documents/cerberus")
-DB_PATH   = os.path.join(BASE_DIR, "data", "recon.db")
+
 SCANS_DIR = os.path.join(BASE_DIR, "data", "scans")
 CONNS_DIR = os.path.join(BASE_DIR, "data", "connections")
 
 
-# ─── DATABASE ─────────────────────────────────────────────────────────────────
-
-def get_db():
-    os.makedirs(os.path.dirname(DB_PATH), exist_ok=True)
-    return sqlite3.connect(DB_PATH)
-
-
-def init_db():
-    """Create tables if they don't exist yet."""
-    conn = get_db()
-    cursor = conn.cursor()
-
-    cursor.execute("""
-        CREATE TABLE IF NOT EXISTS port_observations (
-            id          INTEGER PRIMARY KEY AUTOINCREMENT,
-            timestamp   TEXT NOT NULL,
-            ip          TEXT NOT NULL,
-            port        INTEGER NOT NULL,
-            protocol    TEXT,
-            state       TEXT,
-            service     TEXT,
-            version     TEXT,
-            parsed_at   TEXT NOT NULL
-        )
-    """)
-
-    cursor.execute("""
-        CREATE TABLE IF NOT EXISTS connection_snapshots (
-            id              INTEGER PRIMARY KEY AUTOINCREMENT,
-            timestamp       TEXT NOT NULL,
-            local_address   TEXT,
-            local_port      INTEGER,
-            remote_address  TEXT,
-            remote_port     INTEGER,
-            state           TEXT,
-            process         TEXT,
-            parsed_at       TEXT NOT NULL
-        )
-    """)
-
-    cursor.execute("""
-        CREATE TABLE IF NOT EXISTS parsed_files (
-            id          INTEGER PRIMARY KEY AUTOINCREMENT,
-            filename    TEXT UNIQUE NOT NULL,
-            parsed_at   TEXT NOT NULL
-        )
-    """)
-
-    conn.commit()
-    conn.close()
-    print("[+] Database initialised.")
-
-
-def already_parsed(filename):
-    """Check if a file has already been ingested — prevents double counting."""
-    conn = get_db()
-    cursor = conn.cursor()
-    cursor.execute("SELECT 1 FROM parsed_files WHERE filename = ?", (filename,))
-    result = cursor.fetchone()
-    conn.close()
-    return result is not None
-
-
-def mark_parsed(filename):
-    conn = get_db()
-    cursor = conn.cursor()
-    cursor.execute(
-        "INSERT OR IGNORE INTO parsed_files (filename, parsed_at) VALUES (?, ?)",
-        (filename, datetime.now().isoformat())
-    )
-    conn.commit()
-    conn.close()
-
-
-# ─── NMAP XML PARSER ──────────────────────────────────────────────────────────
+# ─── UTILITIES ────────────────────────────────────────────────────────────────
 
 def extract_timestamp_from_filename(filename):
-    """Pull timestamp out of scan_20260429_080000.xml → ISO datetime string."""
+    """
+    Pull the datetime out of a filename.
+    scan_20260429_080000.xml  →  '2026-04-29T08:00:00'
+    conn_20260429_080000.log  →  '2026-04-29T08:00:00'
+    Falls back to now() if parsing fails.
+    """
     base = os.path.basename(filename)
     try:
-        parts = base.replace(".xml", "").split("_")
-        dt = datetime.strptime(f"{parts[1]}_{parts[2]}", "%Y%m%d_%H%M%S")
+        parts = base.replace(".xml", "").replace(".log", "").split("_")
+        dt    = datetime.strptime(f"{parts[1]}_{parts[2]}", "%Y%m%d_%H%M%S")
         return dt.isoformat()
     except Exception:
         return datetime.now().isoformat()
 
 
+def split_addr_port(addr_str):
+    """
+    Split an address:port string into (address, port).
+    Handles IPv4 '192.168.1.1:443' and IPv6 '[::1]:80'.
+    Returns port as int, or 0 if unparseable.
+    """
+    if addr_str.startswith("["):
+        # IPv6 format: [::1]:port
+        addr, port = addr_str.rsplit(":", 1)
+    elif addr_str.count(":") == 1:
+        addr, port = addr_str.rsplit(":", 1)
+    else:
+        return addr_str, 0
+    try:
+        return addr, int(port)
+    except ValueError:
+        return addr, 0
+
+
+# ─── NMAP XML PARSER ──────────────────────────────────────────────────────────
+
 def parse_nmap_xml(filepath):
-    """Parse one nmap XML file → list of row dicts."""
+    """
+    Parse one nmap XML output file.
+    Returns a list of dicts, one per open port found.
+    Returns [] if the file is empty, malformed, or has no open ports.
+    """
     timestamp = extract_timestamp_from_filename(filepath)
-    rows = []
+    rows      = []
 
     try:
         tree = ET.parse(filepath)
         root = tree.getroot()
     except ET.ParseError as e:
-        print(f"[!] Failed to parse {filepath}: {e}")
+        print(f"[!] XML parse error in {os.path.basename(filepath)}: {e}")
         return []
 
     for host in root.findall("host"):
@@ -130,9 +85,13 @@ def parse_nmap_xml(filepath):
 
             state   = state_el.get("state", "unknown")  if state_el   is not None else "unknown"
             service = service_el.get("name", "unknown") if service_el is not None else "unknown"
-            version = service_el.get("product", "")     if service_el is not None else ""
-            if version and service_el is not None and service_el.get("version"):
-                version += f" {service_el.get('version')}"
+
+            # Build version string: product + version number if available
+            version = ""
+            if service_el is not None:
+                product = service_el.get("product", "")
+                ver     = service_el.get("version", "")
+                version = f"{product} {ver}".strip()
 
             rows.append({
                 "timestamp": timestamp,
@@ -149,12 +108,16 @@ def parse_nmap_xml(filepath):
 
 
 def ingest_nmap_scans():
-    """Find all unparsed XML scan files and load them into SQLite."""
+    """
+    Find every scan_*.xml in data/scans/ that has not been parsed yet.
+    Parse each one and insert rows into port_observations.
+    Marks each file as parsed so it is never processed twice.
+    """
     files     = sorted(glob.glob(os.path.join(SCANS_DIR, "scan_*.xml")))
     new_files = [f for f in files if not already_parsed(os.path.basename(f))]
 
     if not new_files:
-        print("[*] No new scan files to parse.")
+        print("[*] No new nmap scan files to parse.")
         return 0
 
     conn  = get_db()
@@ -167,34 +130,23 @@ def ingest_nmap_scans():
             df.to_sql("port_observations", conn, if_exists="append", index=False)
             mark_parsed(os.path.basename(filepath))
             total += len(rows)
-            print(f"[+] {os.path.basename(filepath)} → {len(rows)} rows inserted")
+            print(f"[+] {os.path.basename(filepath)} → {len(rows)} rows")
         else:
-            print(f"[!] {os.path.basename(filepath)} → empty or failed, skipping")
+            print(f"[!] {os.path.basename(filepath)} → no data, skipping")
 
     conn.close()
-    print(f"[+] Nmap total: {total} rows")
+    print(f"[+] Nmap ingestion complete: {total} rows total")
     return total
 
 
 # ─── SS CONNECTION LOG PARSER ─────────────────────────────────────────────────
 
-def split_addr_port(addr_str):
-    """Split '192.168.1.1:443' or '[::1]:80' into (addr, port)."""
-    if addr_str.startswith("["):
-        # IPv6: [::1]:port
-        addr, port = addr_str.rsplit(":", 1)
-    elif addr_str.count(":") == 1:
-        addr, port = addr_str.rsplit(":", 1)
-    else:
-        return addr_str, 0
-    try:
-        return addr, int(port)
-    except ValueError:
-        return addr, 0
-
-
 def parse_conn_log(filepath):
-    """Parse one ss connection snapshot → list of row dicts."""
+    """
+    Parse one ss connection snapshot written by conn_monitor.sh.
+    Returns a list of dicts, one per connection line.
+    Returns [] if the file cannot be read or contains no valid lines.
+    """
     timestamp = None
     rows      = []
 
@@ -202,13 +154,13 @@ def parse_conn_log(filepath):
         with open(filepath, "r") as f:
             lines = f.readlines()
     except Exception as e:
-        print(f"[!] Could not read {filepath}: {e}")
+        print(f"[!] Could not read {os.path.basename(filepath)}: {e}")
         return []
 
     for line in lines:
         line = line.strip()
 
-        # Extract timestamp from the header line written by conn_monitor.sh
+        # Header written by conn_monitor.sh: "=== TIMESTAMP: 20260429_080000 ==="
         if line.startswith("=== TIMESTAMP:"):
             ts_str = line.replace("=== TIMESTAMP:", "").replace("===", "").strip()
             try:
@@ -218,11 +170,12 @@ def parse_conn_log(filepath):
                 timestamp = datetime.now().isoformat()
             continue
 
-        # Skip section headers and empty lines
+        # Skip section labels and empty lines
         if not line or line.startswith("---") or line.startswith("Netid"):
             continue
 
-        # ss output: State Recv-Q Send-Q Local:Port Peer:Port [Process]
+        # ss line format:
+        # State  Recv-Q  Send-Q  Local Address:Port  Peer Address:Port  [Process]
         parts = line.split()
         if len(parts) < 5:
             continue
@@ -250,7 +203,11 @@ def parse_conn_log(filepath):
 
 
 def ingest_conn_logs():
-    """Find all unparsed connection logs and load them into SQLite."""
+    """
+    Find every conn_*.log in data/connections/ that has not been parsed yet.
+    Parse each one and insert rows into connection_snapshots.
+    Marks each file as parsed so it is never processed twice.
+    """
     files     = sorted(glob.glob(os.path.join(CONNS_DIR, "conn_*.log")))
     new_files = [f for f in files if not already_parsed(os.path.basename(f))]
 
@@ -268,12 +225,12 @@ def ingest_conn_logs():
             df.to_sql("connection_snapshots", conn, if_exists="append", index=False)
             mark_parsed(os.path.basename(filepath))
             total += len(rows)
-            print(f"[+] {os.path.basename(filepath)} → {len(rows)} rows inserted")
+            print(f"[+] {os.path.basename(filepath)} → {len(rows)} rows")
         else:
-            print(f"[!] {os.path.basename(filepath)} → empty or failed, skipping")
+            print(f"[!] {os.path.basename(filepath)} → no data, skipping")
 
     conn.close()
-    print(f"[+] Connections total: {total} rows")
+    print(f"[+] Connection ingestion complete: {total} rows total")
     return total
 
 
@@ -281,6 +238,5 @@ def ingest_conn_logs():
 
 if __name__ == "__main__":
     print("=== Cerberus — Parser ===")
-    init_db()
     ingest_nmap_scans()
     ingest_conn_logs()

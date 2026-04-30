@@ -1,19 +1,41 @@
 """
-Cerberus — main entry point
-Runs the full pipeline: parse → baseline → detect → alert
+Cerberus — Network Threat Detector
+Entry point. Runs the full pipeline in sequence.
+
+Usage:
+    ~/Documents/cerberus/venv/bin/python3 main.py
 """
 
-from engine.parser import init_db, ingest_nmap_scans, ingest_conn_logs
+from engine.db     import init_db, get_stats
+from engine.parser import ingest_nmap_scans, ingest_conn_logs
 
-print("=" * 40)
-print("  Cerberus — Network Threat Detector")
-print("=" * 40)
 
-# Phase 2 — Parse raw scan files into SQLite
-print("\n[*] Phase 2 — Parsing scan data...")
-init_db()
-ingest_nmap_scans()
-ingest_conn_logs()
+def main():
+    print("=" * 45)
+    print("   Cerberus — Network Threat Detector")
+    print("=" * 45)
 
-# Phase 3, 4, 5 will be added here as we build them
-print("\n[+] Done.")
+    # ── Phase 2: initialise DB and parse raw files ──
+    print("\n[Phase 2] Initialising database...")
+    init_db()
+
+    print("\n[Phase 2] Parsing scan data...")
+    ingest_nmap_scans()
+    ingest_conn_logs()
+
+    # ── Phases 3, 4, 5 will slot in here ────────────
+    # from engine.baseline import build_all_baselines
+    # from engine.detector import run_detection
+    # from engine.alerter  import generate_alerts
+
+    # ── Summary ──────────────────────────────────────
+    print("\n--- Database summary ---")
+    stats = get_stats()
+    for key, val in stats.items():
+        print(f"  {key}: {val}")
+
+    print("\n[+] Done.\n")
+
+
+if __name__ == "__main__":
+    main()
