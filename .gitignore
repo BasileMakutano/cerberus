@@ -9,3 +9,4 @@ data/recon.db
 logs/
 models/*.pkl
 .DS_Store
+data/dataset/
