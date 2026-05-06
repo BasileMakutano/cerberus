@@ -1,0 +1,657 @@
+{
+  "21": {
+    "port": 21,
+    "status": "ok",
+    "total_observations": 200,
+    "confidence": "HIGH",
+    "source_composition": {
+      "synthetic": 200
+    },
+    "length": {
+      "available": true,
+      "mean": 60.5,
+      "std": 9.9506,
+      "min": 30.0,
+      "max": 90.0,
+      "lower": 40.5987,
+      "upper": 80.4013
+    },
+    "protocol": {
+      "dominant": "TCP",
+      "dominant_enc": 1,
+      "distribution": {
+        "TCP": 200
+      }
+    }
+  },
+  "22": {
+    "port": 22,
+    "status": "ok",
+    "total_observations": 803,
+    "confidence": "HIGH",
+    "source_composition": {
+      "sqlite": 603,
+      "synthetic": 200
+    },
+    "length": {
+      "available": true,
+      "mean": 228.3574,
+      "std": 407.826,
+      "min": 0.0,
+      "max": 1490.0,
+      "lower": 0,
+      "upper": 1044.0094
+    },
+    "protocol": {
+      "dominant": "TCP",
+      "dominant_enc": 1,
+      "distribution": {
+        "TCP": 803
+      }
+    }
+  },
+  "23": {
+    "port": 23,
+    "status": "ok",
+    "total_observations": 200,
+    "confidence": "HIGH",
+    "source_composition": {
+      "synthetic": 200
+    },
+    "length": {
+      "available": true,
+      "mean": 62.425,
+      "std": 15.4976,
+      "min": 25.0,
+      "max": 110.0,
+      "lower": 31.4298,
+      "upper": 93.4202
+    },
+    "protocol": {
+      "dominant": "TCP",
+      "dominant_enc": 1,
+      "distribution": {
+        "TCP": 200
+      }
+    }
+  },
+  "25": {
+    "port": 25,
+    "status": "ok",
+    "total_observations": 200,
+    "confidence": "HIGH",
+    "source_composition": {
+      "synthetic": 200
+    },
+    "length": {
+      "available": true,
+      "mean": 492.24,
+      "std": 192.7812,
+      "min": 20.0,
+      "max": 1064.0,
+      "lower": 106.6777,
+      "upper": 877.8023
+    },
+    "protocol": {
+      "dominant": "TCP",
+      "dominant_enc": 1,
+      "distribution": {
+        "TCP": 200
+      }
+    }
+  },
+  "53": {
+    "port": 53,
+    "status": "ok",
+    "total_observations": 200,
+    "confidence": "HIGH",
+    "source_composition": {
+      "synthetic": 200
+    },
+    "length": {
+      "available": true,
+      "mean": 83.095,
+      "std": 31.0824,
+      "min": 20.0,
+      "max": 159.0,
+      "lower": 20.9302,
+      "upper": 145.2598
+    },
+    "protocol": {
+      "dominant": "UDP",
+      "dominant_enc": 2,
+      "distribution": {
+        "UDP": 200
+      }
+    }
+  },
+  "80": {
+    "port": 80,
+    "status": "ok",
+    "total_observations": 800,
+    "confidence": "HIGH",
+    "source_composition": {
+      "sqlite": 600,
+      "synthetic": 200
+    },
+    "length": {
+      "available": true,
+      "mean": 206.18,
+      "std": 405.9248,
+      "min": 0.0,
+      "max": 1500.0,
+      "lower": 0,
+      "upper": 1018.0296
+    },
+    "protocol": {
+      "dominant": "TCP",
+      "dominant_enc": 1,
+      "distribution": {
+        "TCP": 800
+      }
+    }
+  },
+  "110": {
+    "port": 110,
+    "status": "ok",
+    "total_observations": 200,
+    "confidence": "HIGH",
+    "source_composition": {
+      "synthetic": 200
+    },
+    "length": {
+      "available": true,
+      "mean": 291.55,
+      "std": 92.9067,
+      "min": 27.0,
+      "max": 526.0,
+      "lower": 105.7367,
+      "upper": 477.3633
+    },
+    "protocol": {
+      "dominant": "TCP",
+      "dominant_enc": 1,
+      "distribution": {
+        "TCP": 200
+      }
+    }
+  },
+  "135": {
+    "port": 135,
+    "status": "ok",
+    "total_observations": 200,
+    "confidence": "HIGH",
+    "source_composition": {
+      "synthetic": 200
+    },
+    "length": {
+      "available": true,
+      "mean": 103.755,
+      "std": 30.8723,
+      "min": 20.0,
+      "max": 174.0,
+      "lower": 42.0103,
+      "upper": 165.4997
+    },
+    "protocol": {
+      "dominant": "TCP",
+      "dominant_enc": 1,
+      "distribution": {
+        "TCP": 200
+      }
+    }
+  },
+  "139": {
+    "port": 139,
+    "status": "ok",
+    "total_observations": 200,
+    "confidence": "HIGH",
+    "source_composition": {
+      "synthetic": 200
+    },
+    "length": {
+      "available": true,
+      "mean": 123.075,
+      "std": 39.5154,
+      "min": 20.0,
+      "max": 229.0,
+      "lower": 44.0442,
+      "upper": 202.1058
+    },
+    "protocol": {
+      "dominant": "TCP",
+      "dominant_enc": 1,
+      "distribution": {
+        "TCP": 200
+      }
+    }
+  },
+  "143": {
+    "port": 143,
+    "status": "ok",
+    "total_observations": 200,
+    "confidence": "HIGH",
+    "source_composition": {
+      "synthetic": 200
+    },
+    "length": {
+      "available": true,
+      "mean": 348.775,
+      "std": 100.9111,
+      "min": 114.0,
+      "max": 579.0,
+      "lower": 146.9528,
+      "upper": 550.5972
+    },
+    "protocol": {
+      "dominant": "TCP",
+      "dominant_enc": 1,
+      "distribution": {
+        "TCP": 200
+      }
+    }
+  },
+  "443": {
+    "port": 443,
+    "status": "ok",
+    "total_observations": 3197,
+    "confidence": "HIGH",
+    "source_composition": {
+      "kaggle": 2997,
+      "synthetic": 200
+    },
+    "length": {
+      "available": true,
+      "mean": 102.4398,
+      "std": 199.4659,
+      "min": 54.0,
+      "max": 1500.0,
+      "lower": 0,
+      "upper": 501.3716
+    },
+    "protocol": {
+      "dominant": "TCP",
+      "dominant_enc": 1,
+      "distribution": {
+        "TCP": 2993,
+        "UDP": 204
+      }
+    }
+  },
+  "445": {
+    "port": 445,
+    "status": "ok",
+    "total_observations": 200,
+    "confidence": "HIGH",
+    "source_composition": {
+      "synthetic": 200
+    },
+    "length": {
+      "available": true,
+      "mean": 199.11,
+      "std": 76.6453,
+      "min": 20.0,
+      "max": 445.0,
+      "lower": 45.8194,
+      "upper": 352.4006
+    },
+    "protocol": {
+      "dominant": "TCP",
+      "dominant_enc": 1,
+      "distribution": {
+        "TCP": 200
+      }
+    }
+  },
+  "1433": {
+    "port": 1433,
+    "status": "ok",
+    "total_observations": 200,
+    "confidence": "HIGH",
+    "source_composition": {
+      "synthetic": 200
+    },
+    "length": {
+      "available": true,
+      "mean": 198.81,
+      "std": 79.1457,
+      "min": 20.0,
+      "max": 382.0,
+      "lower": 40.5186,
+      "upper": 357.1014
+    },
+    "protocol": {
+      "dominant": "TCP",
+      "dominant_enc": 1,
+      "distribution": {
+        "TCP": 200
+      }
+    }
+  },
+  "1521": {
+    "port": 1521,
+    "status": "ok",
+    "total_observations": 200,
+    "confidence": "HIGH",
+    "source_composition": {
+      "synthetic": 200
+    },
+    "length": {
+      "available": true,
+      "mean": 243.76,
+      "std": 82.4354,
+      "min": 40.0,
+      "max": 494.0,
+      "lower": 78.8893,
+      "upper": 408.6307
+    },
+    "protocol": {
+      "dominant": "TCP",
+      "dominant_enc": 1,
+      "distribution": {
+        "TCP": 200
+      }
+    }
+  },
+  "3306": {
+    "port": 3306,
+    "status": "ok",
+    "total_observations": 200,
+    "confidence": "HIGH",
+    "source_composition": {
+      "synthetic": 200
+    },
+    "length": {
+      "available": true,
+      "mean": 181.27,
+      "std": 61.5848,
+      "min": 47.0,
+      "max": 382.0,
+      "lower": 58.1004,
+      "upper": 304.4396
+    },
+    "protocol": {
+      "dominant": "TCP",
+      "dominant_enc": 1,
+      "distribution": {
+        "TCP": 200
+      }
+    }
+  },
+  "3389": {
+    "port": 3389,
+    "status": "ok",
+    "total_observations": 200,
+    "confidence": "HIGH",
+    "source_composition": {
+      "synthetic": 200
+    },
+    "length": {
+      "available": true,
+      "mean": 411.915,
+      "std": 142.5372,
+      "min": 20.0,
+      "max": 760.0,
+      "lower": 126.8405,
+      "upper": 696.9895
+    },
+    "protocol": {
+      "dominant": "TCP",
+      "dominant_enc": 1,
+      "distribution": {
+        "TCP": 200
+      }
+    }
+  },
+  "5432": {
+    "port": 5432,
+    "status": "ok",
+    "total_observations": 200,
+    "confidence": "HIGH",
+    "source_composition": {
+      "synthetic": 200
+    },
+    "length": {
+      "available": true,
+      "mean": 182.985,
+      "std": 58.2679,
+      "min": 20.0,
+      "max": 348.0,
+      "lower": 66.4492,
+      "upper": 299.5208
+    },
+    "protocol": {
+      "dominant": "TCP",
+      "dominant_enc": 1,
+      "distribution": {
+        "TCP": 200
+      }
+    }
+  },
+  "5900": {
+    "port": 5900,
+    "status": "ok",
+    "total_observations": 200,
+    "confidence": "HIGH",
+    "source_composition": {
+      "synthetic": 200
+    },
+    "length": {
+      "available": true,
+      "mean": 489.16,
+      "std": 193.9384,
+      "min": 55.0,
+      "max": 1033.0,
+      "lower": 101.2833,
+      "upper": 877.0367
+    },
+    "protocol": {
+      "dominant": "TCP",
+      "dominant_enc": 1,
+      "distribution": {
+        "TCP": 200
+      }
+    }
+  },
+  "6379": {
+    "port": 6379,
+    "status": "ok",
+    "total_observations": 200,
+    "confidence": "HIGH",
+    "source_composition": {
+      "synthetic": 200
+    },
+    "length": {
+      "available": true,
+      "mean": 99.76,
+      "std": 41.1836,
+      "min": 20.0,
+      "max": 202.0,
+      "lower": 17.3927,
+      "upper": 182.1273
+    },
+    "protocol": {
+      "dominant": "TCP",
+      "dominant_enc": 1,
+      "distribution": {
+        "TCP": 200
+      }
+    }
+  },
+  "8080": {
+    "port": 8080,
+    "status": "ok",
+    "total_observations": 200,
+    "confidence": "HIGH",
+    "source_composition": {
+      "synthetic": 200
+    },
+    "length": {
+      "available": true,
+      "mean": 806.895,
+      "std": 408.6872,
+      "min": 20.0,
+      "max": 1500.0,
+      "lower": 0,
+      "upper": 1624.2695
+    },
+    "protocol": {
+      "dominant": "TCP",
+      "dominant_enc": 1,
+      "distribution": {
+        "TCP": 200
+      }
+    }
+  },
+  "8443": {
+    "port": 8443,
+    "status": "ok",
+    "total_observations": 200,
+    "confidence": "HIGH",
+    "source_composition": {
+      "synthetic": 200
+    },
+    "length": {
+      "available": true,
+      "mean": 804.565,
+      "std": 305.598,
+      "min": 20.0,
+      "max": 1500.0,
+      "lower": 193.3689,
+      "upper": 1415.7611
+    },
+    "protocol": {
+      "dominant": "TCP",
+      "dominant_enc": 1,
+      "distribution": {
+        "TCP": 200
+      }
+    }
+  },
+  "8888": {
+    "port": 8888,
+    "status": "ok",
+    "total_observations": 200,
+    "confidence": "HIGH",
+    "source_composition": {
+      "synthetic": 200
+    },
+    "length": {
+      "available": true,
+      "mean": 706.965,
+      "std": 308.2771,
+      "min": 20.0,
+      "max": 1430.0,
+      "lower": 90.4108,
+      "upper": 1323.5192
+    },
+    "protocol": {
+      "dominant": "TCP",
+      "dominant_enc": 1,
+      "distribution": {
+        "TCP": 200
+      }
+    }
+  },
+  "9200": {
+    "port": 9200,
+    "status": "ok",
+    "total_observations": 200,
+    "confidence": "HIGH",
+    "source_composition": {
+      "synthetic": 200
+    },
+    "length": {
+      "available": true,
+      "mean": 608.02,
+      "std": 215.842,
+      "min": 106.0,
+      "max": 1095.0,
+      "lower": 176.336,
+      "upper": 1039.704
+    },
+    "protocol": {
+      "dominant": "TCP",
+      "dominant_enc": 1,
+      "distribution": {
+        "TCP": 200
+      }
+    }
+  },
+  "27017": {
+    "port": 27017,
+    "status": "ok",
+    "total_observations": 200,
+    "confidence": "HIGH",
+    "source_composition": {
+      "synthetic": 200
+    },
+    "length": {
+      "available": true,
+      "mean": 309.505,
+      "std": 104.4375,
+      "min": 20.0,
+      "max": 628.0,
+      "lower": 100.63,
+      "upper": 518.38
+    },
+    "protocol": {
+      "dominant": "TCP",
+      "dominant_enc": 1,
+      "distribution": {
+        "TCP": 200
+      }
+    }
+  },
+  "2181": {
+    "port": 2181,
+    "status": "ok",
+    "total_observations": 200,
+    "confidence": "HIGH",
+    "source_composition": {
+      "synthetic": 200
+    },
+    "length": {
+      "available": true,
+      "mean": 149.095,
+      "std": 46.3994,
+      "min": 20.0,
+      "max": 258.0,
+      "lower": 56.2963,
+      "upper": 241.8937
+    },
+    "protocol": {
+      "dominant": "TCP",
+      "dominant_enc": 1,
+      "distribution": {
+        "TCP": 200
+      }
+    }
+  },
+  "-1": {
+    "port": -1,
+    "status": "ok",
+    "total_observations": 3186,
+    "confidence": "HIGH",
+    "source_composition": {
+      "kaggle": 3186
+    },
+    "length": {
+      "available": true,
+      "mean": 59.9322,
+      "std": 1.1028,
+      "min": 42.0,
+      "max": 60.0,
+      "lower": 57.7266,
+      "upper": 62.1378
+    },
+    "protocol": {
+      "dominant": "ICMP",
+      "dominant_enc": 0,
+      "distribution": {
+        "ICMP": 2463,
+        "ARP": 723
+      }
+    }
+  }
+}
