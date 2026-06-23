@@ -1,0 +1,140 @@
+{
+  "-1": {
+    "port": -1,
+    "status": "evaluated",
+    "eval_rows": 14634,
+    "normal_rows": 1062,
+    "malicious_rows": 13572,
+    "precision": 0.9997,
+    "recall": 1.0,
+    "f1_score": 0.9999,
+    "mean_score_normal": -0.4916,
+    "mean_score_malicious": -0.5898
+  },
+  "21": {
+    "port": 21,
+    "status": "insufficient_eval_data",
+    "rows": 0
+  },
+  "22": {
+    "port": 22,
+    "status": "insufficient_eval_data",
+    "rows": 0
+  },
+  "23": {
+    "port": 23,
+    "status": "insufficient_eval_data",
+    "rows": 0
+  },
+  "25": {
+    "port": 25,
+    "status": "insufficient_eval_data",
+    "rows": 0
+  },
+  "53": {
+    "port": 53,
+    "status": "insufficient_eval_data",
+    "rows": 0
+  },
+  "80": {
+    "port": 80,
+    "status": "insufficient_eval_data",
+    "rows": 0
+  },
+  "110": {
+    "port": 110,
+    "status": "insufficient_eval_data",
+    "rows": 0
+  },
+  "135": {
+    "port": 135,
+    "status": "insufficient_eval_data",
+    "rows": 0
+  },
+  "139": {
+    "port": 139,
+    "status": "insufficient_eval_data",
+    "rows": 0
+  },
+  "143": {
+    "port": 143,
+    "status": "insufficient_eval_data",
+    "rows": 0
+  },
+  "443": {
+    "port": 443,
+    "status": "single_class_only",
+    "class": 0,
+    "count": 999
+  },
+  "445": {
+    "port": 445,
+    "status": "insufficient_eval_data",
+    "rows": 0
+  },
+  "1433": {
+    "port": 1433,
+    "status": "insufficient_eval_data",
+    "rows": 0
+  },
+  "1521": {
+    "port": 1521,
+    "status": "insufficient_eval_data",
+    "rows": 0
+  },
+  "2181": {
+    "port": 2181,
+    "status": "insufficient_eval_data",
+    "rows": 0
+  },
+  "3306": {
+    "port": 3306,
+    "status": "insufficient_eval_data",
+    "rows": 0
+  },
+  "3389": {
+    "port": 3389,
+    "status": "insufficient_eval_data",
+    "rows": 0
+  },
+  "5432": {
+    "port": 5432,
+    "status": "insufficient_eval_data",
+    "rows": 0
+  },
+  "5900": {
+    "port": 5900,
+    "status": "insufficient_eval_data",
+    "rows": 0
+  },
+  "6379": {
+    "port": 6379,
+    "status": "insufficient_eval_data",
+    "rows": 0
+  },
+  "8080": {
+    "port": 8080,
+    "status": "insufficient_eval_data",
+    "rows": 0
+  },
+  "8443": {
+    "port": 8443,
+    "status": "insufficient_eval_data",
+    "rows": 0
+  },
+  "8888": {
+    "port": 8888,
+    "status": "insufficient_eval_data",
+    "rows": 0
+  },
+  "9200": {
+    "port": 9200,
+    "status": "insufficient_eval_data",
+    "rows": 0
+  },
+  "27017": {
+    "port": 27017,
+    "status": "insufficient_eval_data",
+    "rows": 0
+  }
+}

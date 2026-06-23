@@ -6,11 +6,12 @@ Phases implemented:
     Phase 1 — Bash scripts (run via cron automatically)
     Phase 2 — Database init + live scan parser
     Phase 3 — Dataset cleaner (comment out after first run)
-    Phase 4 — Per-port baseline engine (three-source combined)
+    Phase 4a — Behavioural profiler (port_profiles.json)
+    Phase 4b — Statistical baseline engine (baselines.json)
 
 Phases to be added:
     Phase 5 — Per-port Isolation Forest ML models
-    Phase 6 — Correlation engine (baseline + ML)
+    Phase 6 — Correlation engine (profiler + baseline + ML)
     Phase 7 — Alerting + dashboard
 
 Usage:
@@ -24,6 +25,7 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 from engine.db       import init_db, get_stats
 from engine.parser   import ingest_nmap_scans, ingest_conn_logs
+from engine.profiler import build_all_profiles
 from engine.baseline import build_all_baselines
 
 
@@ -42,19 +44,24 @@ def main() -> None:
     ingest_conn_logs()
 
     # ── Phase 3: Dataset cleaning ──────────────────────────────────────────
-    # Ran successfully — clean.csv and normal_only.csv exist.
+    # Already ran — clean.csv and normal_only.csv exist.
     # Uncomment ONLY if you need to re-clean from scratch.
     #
     # from engine.cleaner import clean
     # print("\n[Phase 3] Cleaning Kaggle dataset...")
     # clean()
 
-    # ── Phase 4: Baseline engine ───────────────────────────────────────────
+    # ── Phase 4a: Behavioural profiler ────────────────────────────────────
+    # Reads live SQLite data → builds port_profiles.json
+    # Re-runs every time so profiles stay current with new scan data
+    print("\n[Phase 4a] Building behavioural profiles...")
+    build_all_profiles()
+
+    # ── Phase 4b: Statistical baseline engine ─────────────────────────────
     # Merges Kaggle + SQLite + synthetic → combined_normal.csv
-    # Builds baselines.json (one entry per port)
-    # Comment out after first successful run if you don't want
-    # it to rebuild baselines on every execution.
-    print("\n[Phase 4] Building per-port baselines...")
+    # Builds baselines.json (statistical layer)
+    # Comment out after first run if baselines are stable
+    print("\n[Phase 4b] Building statistical baselines...")
     build_all_baselines()
 
     # ── Phase 5: ML detection ──────────────────────────────────────────────

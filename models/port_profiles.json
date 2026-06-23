@@ -1,0 +1,400 @@
+{
+  "21": {
+    "port": 21,
+    "status": "ok",
+    "confidence": "MEDIUM",
+    "total_observations": 7,
+    "first_seen": "2026-05-22T08:45:01",
+    "last_seen": "2026-05-22T10:20:01",
+    "known_ips": {
+      "list": [
+        "192.168.100.100"
+      ],
+      "count": 1
+    },
+    "service": {
+      "expected": "tcpwrapped",
+      "all_seen": {
+        "tcpwrapped": 7
+      },
+      "versions": []
+    },
+    "protocol": {
+      "expected": "tcp",
+      "all_seen": {
+        "tcp": 7
+      }
+    },
+    "scan_frequency": {
+      "mean": 2.3333,
+      "std": 0.4714,
+      "min": 2,
+      "max": 3,
+      "lower": 1.3905,
+      "upper": 3.2761,
+      "hours_observed": 3
+    },
+    "connection_frequency": {},
+    "connections": {
+      "known_processes": [],
+      "known_states": [],
+      "known_remote_ips": []
+    },
+    "presence": {
+      "rate": 0.1944,
+      "description": "rarely open"
+    }
+  },
+  "22": {
+    "port": 22,
+    "status": "ok",
+    "confidence": "HIGH",
+    "total_observations": 304,
+    "first_seen": "2026-05-02T13:23:23",
+    "last_seen": "2026-05-17T22:05:01",
+    "known_ips": {
+      "list": [
+        "192.168.100.100"
+      ],
+      "count": 1
+    },
+    "service": {
+      "expected": "ssh",
+      "all_seen": {
+        "ssh": 304
+      },
+      "versions": [
+        "OpenSSH 9.6p1 Ubuntu 3ubuntu13.15",
+        "OpenSSH 9.6p1 Ubuntu 3ubuntu13.16"
+      ]
+    },
+    "protocol": {
+      "expected": "tcp",
+      "all_seen": {
+        "tcp": 304
+      }
+    },
+    "scan_frequency": {
+      "mean": 9.5,
+      "std": 3.326,
+      "min": 2,
+      "max": 13,
+      "lower": 2.8479,
+      "upper": 16.1521,
+      "hours_observed": 32
+    },
+    "connection_frequency": {
+      "mean": 20.525,
+      "std": 6.8392,
+      "min": 2,
+      "max": 26,
+      "lower": 6.8466,
+      "upper": 34.2034,
+      "hours_observed": 80
+    },
+    "connections": {
+      "known_processes": [
+        "sshd"
+      ],
+      "known_states": [
+        "LISTEN"
+      ],
+      "known_remote_ips": [
+        "0.0.0.0:*",
+        "[::]:*"
+      ]
+    },
+    "presence": {
+      "rate": 0.7917,
+      "description": "intermittently open"
+    }
+  },
+  "23": {
+    "port": 23,
+    "status": "insufficient_data",
+    "total_observations": 0,
+    "confidence": "LOW",
+    "note": "Only 0 observations. Need at least 5 before this port has a reliable behavioural profile. Keep collecting data."
+  },
+  "25": {
+    "port": 25,
+    "status": "insufficient_data",
+    "total_observations": 0,
+    "confidence": "LOW",
+    "note": "Only 0 observations. Need at least 5 before this port has a reliable behavioural profile. Keep collecting data."
+  },
+  "53": {
+    "port": 53,
+    "status": "insufficient_data",
+    "total_observations": 0,
+    "confidence": "LOW",
+    "note": "Only 0 observations. Need at least 5 before this port has a reliable behavioural profile. Keep collecting data."
+  },
+  "80": {
+    "port": 80,
+    "status": "ok",
+    "confidence": "HIGH",
+    "total_observations": 323,
+    "first_seen": "2026-05-02T13:35:01",
+    "last_seen": "2026-05-22T10:20:01",
+    "known_ips": {
+      "list": [
+        "192.168.100.100"
+      ],
+      "count": 1
+    },
+    "service": {
+      "expected": "http",
+      "all_seen": {
+        "http": 323
+      },
+      "versions": [
+        "Apache httpd 2.4.58",
+        "GoAhead WebServer"
+      ]
+    },
+    "protocol": {
+      "expected": "tcp",
+      "all_seen": {
+        "tcp": 323
+      }
+    },
+    "scan_frequency": {
+      "mean": 8.9722,
+      "std": 3.6552,
+      "min": 2,
+      "max": 13,
+      "lower": 1.6619,
+      "upper": 16.2826,
+      "hours_observed": 36
+    },
+    "connection_frequency": {},
+    "connections": {
+      "known_processes": [],
+      "known_states": [],
+      "known_remote_ips": []
+    },
+    "presence": {
+      "rate": 0.7477,
+      "description": "intermittently open"
+    }
+  },
+  "110": {
+    "port": 110,
+    "status": "insufficient_data",
+    "total_observations": 0,
+    "confidence": "LOW",
+    "note": "Only 0 observations. Need at least 5 before this port has a reliable behavioural profile. Keep collecting data."
+  },
+  "135": {
+    "port": 135,
+    "status": "insufficient_data",
+    "total_observations": 0,
+    "confidence": "LOW",
+    "note": "Only 0 observations. Need at least 5 before this port has a reliable behavioural profile. Keep collecting data."
+  },
+  "139": {
+    "port": 139,
+    "status": "insufficient_data",
+    "total_observations": 0,
+    "confidence": "LOW",
+    "note": "Only 0 observations. Need at least 5 before this port has a reliable behavioural profile. Keep collecting data."
+  },
+  "143": {
+    "port": 143,
+    "status": "insufficient_data",
+    "total_observations": 0,
+    "confidence": "LOW",
+    "note": "Only 0 observations. Need at least 5 before this port has a reliable behavioural profile. Keep collecting data."
+  },
+  "443": {
+    "port": 443,
+    "status": "ok",
+    "confidence": "MEDIUM",
+    "total_observations": 12,
+    "first_seen": "2026-05-13T12:05:01",
+    "last_seen": "2026-05-22T09:45:01",
+    "known_ips": {
+      "list": [
+        "192.168.100.100"
+      ],
+      "count": 1
+    },
+    "service": {
+      "expected": "http",
+      "all_seen": {
+        "http": 6,
+        "https": 5,
+        "tcpwrapped": 1
+      },
+      "versions": [
+        "GoAhead WebServer"
+      ]
+    },
+    "protocol": {
+      "expected": "tcp",
+      "all_seen": {
+        "tcp": 12
+      }
+    },
+    "scan_frequency": {
+      "mean": 4.0,
+      "std": 2.8284,
+      "min": 2,
+      "max": 8,
+      "lower": 0.0,
+      "upper": 9.6569,
+      "hours_observed": 3
+    },
+    "connection_frequency": {},
+    "connections": {
+      "known_processes": [],
+      "known_states": [],
+      "known_remote_ips": []
+    },
+    "presence": {
+      "rate": 0.3333,
+      "description": "intermittently open"
+    }
+  },
+  "445": {
+    "port": 445,
+    "status": "insufficient_data",
+    "total_observations": 0,
+    "confidence": "LOW",
+    "note": "Only 0 observations. Need at least 5 before this port has a reliable behavioural profile. Keep collecting data."
+  },
+  "1433": {
+    "port": 1433,
+    "status": "insufficient_data",
+    "total_observations": 0,
+    "confidence": "LOW",
+    "note": "Only 0 observations. Need at least 5 before this port has a reliable behavioural profile. Keep collecting data."
+  },
+  "1521": {
+    "port": 1521,
+    "status": "insufficient_data",
+    "total_observations": 0,
+    "confidence": "LOW",
+    "note": "Only 0 observations. Need at least 5 before this port has a reliable behavioural profile. Keep collecting data."
+  },
+  "2181": {
+    "port": 2181,
+    "status": "insufficient_data",
+    "total_observations": 0,
+    "confidence": "LOW",
+    "note": "Only 0 observations. Need at least 5 before this port has a reliable behavioural profile. Keep collecting data."
+  },
+  "3306": {
+    "port": 3306,
+    "status": "insufficient_data",
+    "total_observations": 0,
+    "confidence": "LOW",
+    "note": "Only 0 observations. Need at least 5 before this port has a reliable behavioural profile. Keep collecting data."
+  },
+  "3389": {
+    "port": 3389,
+    "status": "insufficient_data",
+    "total_observations": 0,
+    "confidence": "LOW",
+    "note": "Only 0 observations. Need at least 5 before this port has a reliable behavioural profile. Keep collecting data."
+  },
+  "5432": {
+    "port": 5432,
+    "status": "insufficient_data",
+    "total_observations": 0,
+    "confidence": "LOW",
+    "note": "Only 0 observations. Need at least 5 before this port has a reliable behavioural profile. Keep collecting data."
+  },
+  "5900": {
+    "port": 5900,
+    "status": "insufficient_data",
+    "total_observations": 0,
+    "confidence": "LOW",
+    "note": "Only 0 observations. Need at least 5 before this port has a reliable behavioural profile. Keep collecting data."
+  },
+  "6379": {
+    "port": 6379,
+    "status": "insufficient_data",
+    "total_observations": 0,
+    "confidence": "LOW",
+    "note": "Only 0 observations. Need at least 5 before this port has a reliable behavioural profile. Keep collecting data."
+  },
+  "8080": {
+    "port": 8080,
+    "status": "ok",
+    "confidence": "MEDIUM",
+    "total_observations": 20,
+    "first_seen": "2026-05-13T12:05:01",
+    "last_seen": "2026-05-22T10:20:01",
+    "known_ips": {
+      "list": [
+        "192.168.100.100"
+      ],
+      "count": 1
+    },
+    "service": {
+      "expected": "http",
+      "all_seen": {
+        "http": 12,
+        "http-proxy": 8
+      },
+      "versions": [
+        "GoAhead WebServer"
+      ]
+    },
+    "protocol": {
+      "expected": "tcp",
+      "all_seen": {
+        "tcp": 20
+      }
+    },
+    "scan_frequency": {
+      "mean": 5.0,
+      "std": 3.3166,
+      "min": 2,
+      "max": 10,
+      "lower": 0.0,
+      "upper": 11.6332,
+      "hours_observed": 4
+    },
+    "connection_frequency": {},
+    "connections": {
+      "known_processes": [],
+      "known_states": [],
+      "known_remote_ips": []
+    },
+    "presence": {
+      "rate": 0.4167,
+      "description": "intermittently open"
+    }
+  },
+  "8443": {
+    "port": 8443,
+    "status": "insufficient_data",
+    "total_observations": 0,
+    "confidence": "LOW",
+    "note": "Only 0 observations. Need at least 5 before this port has a reliable behavioural profile. Keep collecting data."
+  },
+  "8888": {
+    "port": 8888,
+    "status": "insufficient_data",
+    "total_observations": 0,
+    "confidence": "LOW",
+    "note": "Only 0 observations. Need at least 5 before this port has a reliable behavioural profile. Keep collecting data."
+  },
+  "9200": {
+    "port": 9200,
+    "status": "insufficient_data",
+    "total_observations": 0,
+    "confidence": "LOW",
+    "note": "Only 0 observations. Need at least 5 before this port has a reliable behavioural profile. Keep collecting data."
+  },
+  "27017": {
+    "port": 27017,
+    "status": "insufficient_data",
+    "total_observations": 0,
+    "confidence": "LOW",
+    "note": "Only 0 observations. Need at least 5 before this port has a reliable behavioural profile. Keep collecting data."
+  }
+}
