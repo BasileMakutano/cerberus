@@ -103,16 +103,15 @@ CORR_LOG_PATH     = os.path.join(BASE_DIR, "logs", "correlation.log")
 SCORE_HIGH_MARGIN   = 0.05   # score ≤ threshold - 0.05 → HIGH confidence
 SCORE_MEDIUM_MARGIN = 0.01   # score ≤ threshold - 0.01 → MEDIUM confidence
 
-# Layer 1 trigger severity weights.
-# Triggers closer to confirmed reconnaissance are weighted higher.
+# Layer 1 trigger severity weights — keys must match trigger strings
+# emitted by profiler.check_observation() exactly.
 TRIGGER_SEVERITY = {
-    "NEW_PORT_EXPOSURE":  "HIGH",
-    "UNKNOWN_PORT":       "HIGH",
-    "WRONG_SERVICE":      "MEDIUM",
-    "WRONG_PROTOCOL":     "MEDIUM",
-    "UNKNOWN_IP":         "LOW",
-    "FREQUENCY_SPIKE":    "LOW",
-    "NEW_VERSION":        "LOW",
+    "UNKNOWN_PORT":   "HIGH",
+    "WRONG_SERVICE":  "HIGH",
+    "UNKNOWN_IP":     "MEDIUM",
+    "FREQUENCY_SPIKE": "MEDIUM",
+    "WRONG_PROTOCOL": "MEDIUM",
+    "NEW_VERSION":    "LOW",
 }
 
 
@@ -270,14 +269,23 @@ def correlate_observation(row: dict, baselines: dict, port_profiles: dict) -> di
 
     # ------------------------------------------------------------------
     # Layer 1 — Behavioural profiler
+    # check_observation() returns:
+    #   { flagged, severity, triggers (list), confidence, port }
+    # We take the highest-severity trigger as the primary trigger string
+    # for downstream severity derivation and alert labelling.
     # ------------------------------------------------------------------
-    l1_result = check_observation(row, port_profiles)
+    l1_result  = check_observation(row, port_profiles)
 
     if not l1_result.get("flagged", False):
         return None
 
-    trigger    = l1_result.get("trigger",  "UNKNOWN")
-    l1_details = l1_result.get("details",  {})
+    triggers   = l1_result.get("triggers", [])
+    trigger    = triggers[0] if triggers else "UNKNOWN"  # primary trigger
+    l1_details = {
+        "triggers":   triggers,
+        "severity":   l1_result.get("severity",   "LOW"),
+        "confidence": l1_result.get("confidence", "UNKNOWN"),
+    }
 
     # ------------------------------------------------------------------
     # Layer 2 — Isolation Forest

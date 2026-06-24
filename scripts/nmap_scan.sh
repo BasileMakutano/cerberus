@@ -10,7 +10,7 @@ TIMESTAMP=$(date +%Y%m%d_%H%M%S)
 CERBERUS_DIR="/home/blessing/Documents/cerberus"
 OUTPUT_DIR="$CERBERUS_DIR/data/scans"
 LOG_FILE="$CERBERUS_DIR/logs/recon.log"
-TARGET="192.168.100.100"
+TARGET="192.168.56.102"
 
 # 25 critical ports as defined in the concept note
 PORTS="21,22,23,25,53,80,110,135,139,143,443,445,\
