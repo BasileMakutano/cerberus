@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Cerberus — Network Monitor</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<div class="shell">
+
+  <!-- Topbar -->
+  <header class="topbar">
+    <div class="topbar-left">
+      <div class="topbar-logo">
+        <div class="logo-icon">⬡</div>
+        <div>
+          <div class="logo-name">Cerberus</div>
+          <div class="logo-sub">network monitor</div>
+        </div>
+      </div>
+      <div class="topbar-sep"></div>
+      <div class="status-pill">
+        <div class="status-dot"></div>
+        System Status: Active
+      </div>
+    </div>
+    <div class="topbar-right">
+      <span class="last-sync" id="lastSync">Last sync: —</span>
+      <button class="icon-btn" title="Alerts" onclick="showView('alerts')">🔔</button>
+      <button class="icon-btn" title="Settings">⚙</button>
+    </div>
+  </header>
+
+  <!-- Sidebar -->
+  <nav class="sidebar">
+    <div class="nav-label">Navigation</div>
+    <div class="nav-item active" onclick="showView('overview')">
+      <span class="nav-icon">⊞</span> Overview
+    </div>
+    <div class="nav-item" onclick="showView('alerts')">
+      <span class="nav-icon">▲</span> Alerts
+      <span class="nav-badge" id="sidebarBadge">0</span>
+    </div>
+    <div class="nav-item" onclick="showView('baselines')">
+      <span class="nav-icon">≈</span> Baselines
+    </div>
+    <div class="nav-item" onclick="showView('ports')">
+      <span class="nav-icon">⬡</span> Ports
+    </div>
+    <div class="nav-item" onclick="showView('overview')">
+      <span class="nav-icon">↻</span> Cycle log
+    </div>
+    <div class="nav-item">
+      <span class="nav-icon">≡</span> Settings
+    </div>
+    <div class="sidebar-footer">
+      <div>ENGINE: <span style="color:var(--low)">Running</span></div>
+      <div>DB: <span style="color:var(--low)">Connected</span></div>
+      <div id="sidebarCycle">CYCLE: —</div>
+    </div>
+  </nav>
+
+  <!-- Main content -->
+  <main class="content">
+
+    <!-- Stat cards -->
+    <div class="stat-row">
+      <div class="stat-card">
+        <div class="stat-top">
+          <div class="stat-lbl">Total Alerts (Cycle)</div>
+          <div class="stat-chip chip-info" id="chipDelta">—</div>
+        </div>
+        <div class="stat-val c-accent" id="statTotal">—</div>
+        <div class="stat-sub" id="statDeltaSub">—</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-top">
+          <div class="stat-lbl">High Severity</div>
+          <div class="stat-chip chip-high">HIGH</div>
+        </div>
+        <div class="stat-val c-high" id="statHigh">—</div>
+        <div class="stat-sub">Requires review</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-top">
+          <div class="stat-lbl">Medium Severity</div>
+          <div class="stat-chip chip-med">MED</div>
+        </div>
+        <div class="stat-val c-med" id="statMed">—</div>
+        <div class="stat-sub">Within threshold</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-top">
+          <div class="stat-lbl">Active Ports Monitored</div>
+          <div class="stat-chip chip-ok">OK</div>
+        </div>
+        <div class="stat-val c-info" id="statPorts">25</div>
+        <div class="stat-sub" id="statPortsSub">0 above baseline</div>
+      </div>
+    </div>
+
+    <!-- Mid row -->
+    <div class="mid-row">
+      <div class="panel">
+        <div class="panel-header">
+          <div class="panel-title">
+            <span class="panel-title-icon">▲</span>
+            Recent Alerts
+            <span class="unacked-badge" id="unackedBadge">0 unacked</span>
+          </div>
+          <div class="panel-actions">
+            <button class="link-btn" onclick="showView('alerts')">View all →</button>
+          </div>
+        </div>
+        <table class="alert-table">
+          <thead>
+            <tr>
+              <th>Severity</th><th>Port</th><th>Description</th><th>Timestamp</th><th>Action</th>
+            </tr>
+          </thead>
+          <tbody id="alertTableBody">
+            <tr class="empty-row"><td colspan="5">Loading alerts…</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="panel cycle-panel">
+        <div class="panel-header">
+          <div class="panel-title">↻ Last Cycle Summary</div>
+          <span style="font-family:var(--mono);font-size:.65rem;color:var(--text-dim)" id="cycleNum">#—</span>
+        </div>
+        <div class="cycle-grid">
+          <div class="cycle-cell"><div class="cycle-lbl">Duration</div><div class="cycle-val">5m 00s</div></div>
+          <div class="cycle-cell"><div class="cycle-lbl">Scan Time</div><div class="cycle-val" id="cycleScanTime">—</div></div>
+          <div class="cycle-cell"><div class="cycle-lbl">Total Alerts</div><div class="cycle-val" id="cycleTotalAlerts">—</div></div>
+          <div class="cycle-cell"><div class="cycle-lbl">Ports Scanned</div><div class="cycle-val">25</div></div>
+          <div class="cycle-cell"><div class="cycle-lbl">High Severity</div><div class="cycle-val c-high" id="cycleHigh">—</div></div>
+          <div class="cycle-cell"><div class="cycle-lbl">Anomalies</div><div class="cycle-val c-med" id="cycleAnomalies">—</div></div>
+          <div class="cycle-cell"><div class="cycle-lbl">Acknowledged</div><div class="cycle-val c-low" id="cycleAcked">—</div></div>
+          <div class="cycle-cell"><div class="cycle-lbl">Unresolved</div><div class="cycle-val" id="cycleUnresolved">—</div></div>
+        </div>
+        <div class="cycle-note">
+          <span class="cycle-note-icon">↻</span>
+          <span id="cycleNote">Run the alerter to generate cycle data.</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Bottom row -->
+    <div class="bottom-row">
+      <div class="panel">
+        <div class="panel-header">
+          <div class="panel-title">≡ Port Activity vs Baseline</div>
+          <span style="font-size:.65rem;color:var(--text-dim)" id="barCycleLabel">—</span>
+        </div>
+        <div class="bar-legend">
+          <div class="legend-item"><div class="legend-swatch base"></div> Baseline</div>
+          <div class="legend-item"><div class="legend-swatch curr"></div> Current</div>
+        </div>
+        <div class="bar-chart" id="barChart">
+          <div style="color:var(--text-dim);font-size:.72rem">Loading chart…</div>
+        </div>
+      </div>
+
+      <div class="panel">
+        <div class="panel-header">
+          <div class="panel-title">↗ Alerts / Last 7 Cycles</div>
+          <span style="font-size:.65rem;color:var(--text-dim)" id="sparkCurrent">Current: —</span>
+        </div>
+        <div class="spark-wrap">
+          <svg class="spark-svg" id="sparkSvg" viewBox="0 0 400 120" preserveAspectRatio="none"></svg>
+        </div>
+        <div class="spark-label">
+          <span class="spark-sub" id="sparkSub">—</span>
+          <span class="spark-trend" id="sparkTrend">—</span>
+        </div>
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<script src="app.js"></script>
+</body>
+</html>
