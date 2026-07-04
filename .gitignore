@@ -10,3 +10,4 @@ logs/
 models/*.pkl
 .DS_Store
 data/dataset/
+models/

@@ -2,153 +2,157 @@
   "21": {
     "port": 21,
     "status": "ok",
-    "total_observations": 221,
+    "total_observations": 284,
     "confidence": "HIGH",
     "source_composition": {
       "synthetic": 200,
-      "sqlite": 21
+      "sqlite": 84
     },
     "length": {
       "available": true,
-      "mean": 54.7511,
-      "std": 20.1433,
+      "mean": 42.6056,
+      "std": 28.8915,
       "min": 0.0,
       "max": 90.0,
-      "lower": 14.4646,
-      "upper": 95.0377
+      "lower": 0,
+      "upper": 100.3887
     },
     "protocol": {
       "dominant": "TCP",
       "dominant_enc": 1,
       "distribution": {
-        "TCP": 221
+        "TCP": 284
       }
     }
   },
   "22": {
     "port": 22,
     "status": "ok",
-    "total_observations": 1112,
+    "total_observations": 1508,
     "confidence": "HIGH",
     "source_composition": {
-      "sqlite": 912,
+      "sqlite": 1308,
       "synthetic": 200
     },
     "length": {
       "available": true,
-      "mean": 164.902,
-      "std": 361.2985,
+      "mean": 121.5988,
+      "std": 318.5971,
       "min": 0.0,
       "max": 1490.0,
       "lower": 0,
-      "upper": 887.4989
+      "upper": 758.793
     },
     "protocol": {
       "dominant": "TCP",
       "dominant_enc": 1,
       "distribution": {
-        "TCP": 1112
+        "TCP": 1508
       }
     }
   },
   "23": {
     "port": 23,
     "status": "ok",
-    "total_observations": 200,
+    "total_observations": 263,
     "confidence": "HIGH",
     "source_composition": {
-      "synthetic": 200
+      "synthetic": 200,
+      "sqlite": 63
     },
     "length": {
       "available": true,
-      "mean": 62.425,
-      "std": 15.4976,
-      "min": 25.0,
+      "mean": 47.4715,
+      "std": 29.9165,
+      "min": 0.0,
       "max": 110.0,
-      "lower": 31.4298,
-      "upper": 93.4202
+      "lower": 0,
+      "upper": 107.3045
     },
     "protocol": {
       "dominant": "TCP",
       "dominant_enc": 1,
       "distribution": {
-        "TCP": 200
+        "TCP": 263
       }
     }
   },
   "25": {
     "port": 25,
     "status": "ok",
-    "total_observations": 200,
+    "total_observations": 263,
     "confidence": "HIGH",
     "source_composition": {
-      "synthetic": 200
+      "synthetic": 200,
+      "sqlite": 63
     },
     "length": {
       "available": true,
-      "mean": 492.24,
-      "std": 192.7812,
-      "min": 20.0,
+      "mean": 374.327,
+      "std": 269.3224,
+      "min": 0.0,
       "max": 1064.0,
-      "lower": 106.6777,
-      "upper": 877.8023
+      "lower": 0,
+      "upper": 912.9717
     },
     "protocol": {
       "dominant": "TCP",
       "dominant_enc": 1,
       "distribution": {
-        "TCP": 200
+        "TCP": 263
       }
     }
   },
   "53": {
     "port": 53,
     "status": "ok",
-    "total_observations": 200,
+    "total_observations": 263,
     "confidence": "HIGH",
     "source_composition": {
-      "synthetic": 200
+      "synthetic": 200,
+      "sqlite": 63
     },
     "length": {
       "available": true,
-      "mean": 83.095,
-      "std": 31.0824,
-      "min": 20.0,
+      "mean": 63.1901,
+      "std": 44.6811,
+      "min": 0.0,
       "max": 159.0,
-      "lower": 20.9302,
-      "upper": 145.2598
+      "lower": 0,
+      "upper": 152.5523
     },
     "protocol": {
       "dominant": "UDP",
       "dominant_enc": 2,
       "distribution": {
-        "UDP": 200
+        "UDP": 200,
+        "TCP": 63
       }
     }
   },
   "80": {
     "port": 80,
     "status": "ok",
-    "total_observations": 1169,
+    "total_observations": 1244,
     "confidence": "HIGH",
     "source_composition": {
-      "sqlite": 969,
+      "sqlite": 1044,
       "synthetic": 200
     },
     "length": {
       "available": true,
-      "mean": 141.0984,
-      "std": 349.1551,
+      "mean": 132.5916,
+      "std": 340.1211,
       "min": 0.0,
       "max": 1500.0,
       "lower": 0,
-      "upper": 839.4085
+      "upper": 812.8338
     },
     "protocol": {
       "dominant": "TCP",
       "dominant_enc": 1,
       "distribution": {
-        "TCP": 1169
+        "TCP": 1244
       }
     }
   },
@@ -205,25 +209,26 @@
   "139": {
     "port": 139,
     "status": "ok",
-    "total_observations": 200,
+    "total_observations": 263,
     "confidence": "HIGH",
     "source_composition": {
-      "synthetic": 200
+      "synthetic": 200,
+      "sqlite": 63
     },
     "length": {
       "available": true,
-      "mean": 123.075,
-      "std": 39.5154,
-      "min": 20.0,
+      "mean": 93.5932,
+      "std": 62.8954,
+      "min": 0.0,
       "max": 229.0,
-      "lower": 44.0442,
-      "upper": 202.1058
+      "lower": 0,
+      "upper": 219.3839
     },
     "protocol": {
       "dominant": "TCP",
       "dominant_enc": 1,
       "distribution": {
-        "TCP": 200
+        "TCP": 263
       }
     }
   },
@@ -255,27 +260,27 @@
   "443": {
     "port": 443,
     "status": "ok",
-    "total_observations": 3233,
+    "total_observations": 3242,
     "confidence": "HIGH",
     "source_composition": {
       "kaggle": 2997,
       "synthetic": 200,
-      "sqlite": 36
+      "sqlite": 45
     },
     "length": {
       "available": true,
-      "mean": 101.2991,
-      "std": 198.6431,
+      "mean": 101.0179,
+      "std": 198.4387,
       "min": 0.0,
       "max": 1500.0,
       "lower": 0,
-      "upper": 498.5852
+      "upper": 497.8953
     },
     "protocol": {
       "dominant": "TCP",
       "dominant_enc": 1,
       "distribution": {
-        "TCP": 3029,
+        "TCP": 3038,
         "UDP": 204
       }
     }
@@ -283,25 +288,26 @@
   "445": {
     "port": 445,
     "status": "ok",
-    "total_observations": 200,
+    "total_observations": 263,
     "confidence": "HIGH",
     "source_composition": {
-      "synthetic": 200
+      "synthetic": 200,
+      "sqlite": 63
     },
     "length": {
       "available": true,
-      "mean": 199.11,
-      "std": 76.6453,
-      "min": 20.0,
+      "mean": 151.4144,
+      "std": 108.2187,
+      "min": 0.0,
       "max": 445.0,
-      "lower": 45.8194,
-      "upper": 352.4006
+      "lower": 0,
+      "upper": 367.8519
     },
     "protocol": {
       "dominant": "TCP",
       "dominant_enc": 1,
       "distribution": {
-        "TCP": 200
+        "TCP": 263
       }
     }
   },
@@ -358,25 +364,26 @@
   "3306": {
     "port": 3306,
     "status": "ok",
-    "total_observations": 200,
+    "total_observations": 263,
     "confidence": "HIGH",
     "source_composition": {
-      "synthetic": 200
+      "synthetic": 200,
+      "sqlite": 63
     },
     "length": {
       "available": true,
-      "mean": 181.27,
-      "std": 61.5848,
-      "min": 47.0,
+      "mean": 137.8479,
+      "std": 94.2825,
+      "min": 0.0,
       "max": 382.0,
-      "lower": 58.1004,
-      "upper": 304.4396
+      "lower": 0,
+      "upper": 326.413
     },
     "protocol": {
       "dominant": "TCP",
       "dominant_enc": 1,
       "distribution": {
-        "TCP": 200
+        "TCP": 263
       }
     }
   },
@@ -408,50 +415,52 @@
   "5432": {
     "port": 5432,
     "status": "ok",
-    "total_observations": 200,
+    "total_observations": 263,
     "confidence": "HIGH",
     "source_composition": {
-      "synthetic": 200
+      "synthetic": 200,
+      "sqlite": 63
     },
     "length": {
       "available": true,
-      "mean": 182.985,
-      "std": 58.2679,
-      "min": 20.0,
+      "mean": 139.1521,
+      "std": 93.2817,
+      "min": 0.0,
       "max": 348.0,
-      "lower": 66.4492,
-      "upper": 299.5208
+      "lower": 0,
+      "upper": 325.7155
     },
     "protocol": {
       "dominant": "TCP",
       "dominant_enc": 1,
       "distribution": {
-        "TCP": 200
+        "TCP": 263
       }
     }
   },
   "5900": {
     "port": 5900,
     "status": "ok",
-    "total_observations": 200,
+    "total_observations": 263,
     "confidence": "HIGH",
     "source_composition": {
-      "synthetic": 200
+      "synthetic": 200,
+      "sqlite": 63
     },
     "length": {
       "available": true,
-      "mean": 489.16,
-      "std": 193.9384,
-      "min": 55.0,
+      "mean": 371.9848,
+      "std": 268.927,
+      "min": 0.0,
       "max": 1033.0,
-      "lower": 101.2833,
-      "upper": 877.0367
+      "lower": 0,
+      "upper": 909.8387
     },
     "protocol": {
       "dominant": "TCP",
       "dominant_enc": 1,
       "distribution": {
-        "TCP": 200
+        "TCP": 263
       }
     }
   },
@@ -483,26 +492,26 @@
   "8080": {
     "port": 8080,
     "status": "ok",
-    "total_observations": 260,
+    "total_observations": 272,
     "confidence": "HIGH",
     "source_composition": {
       "synthetic": 200,
-      "sqlite": 60
+      "sqlite": 72
     },
     "length": {
       "available": true,
-      "mean": 620.6885,
-      "std": 494.3224,
+      "mean": 593.3051,
+      "std": 499.8411,
       "min": 0.0,
       "max": 1500.0,
       "lower": 0,
-      "upper": 1609.3333
+      "upper": 1592.9873
     },
     "protocol": {
       "dominant": "TCP",
       "dominant_enc": 1,
       "distribution": {
-        "TCP": 260
+        "TCP": 272
       }
     }
   },

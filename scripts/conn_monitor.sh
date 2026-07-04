@@ -7,7 +7,8 @@
 # =============================================================================
 
 TIMESTAMP=$(date +%Y%m%d_%H%M%S)
-CERBERUS_DIR="/home/blessing/Documents/cerberus"
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+CERBERUS_DIR="${CERBERUS_DIR:-$(cd "$SCRIPT_DIR/.." && pwd)}"
 OUTPUT_DIR="$CERBERUS_DIR/data/connections"
 LOG_FILE="$CERBERUS_DIR/logs/recon.log"
 

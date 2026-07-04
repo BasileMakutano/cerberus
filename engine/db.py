@@ -13,9 +13,10 @@ import sqlite3
 import os
 from datetime import datetime
 
+from engine.config import BASE_DIR as CONFIG_BASE_DIR, DB_PATH as CONFIG_DB_PATH
 
-BASE_DIR = os.path.expanduser("~/Documents/cerberus")
-DB_PATH  = os.path.join(BASE_DIR, "data", "recon.db")
+BASE_DIR = str(CONFIG_BASE_DIR)
+DB_PATH  = str(CONFIG_DB_PATH)
 
 
 # =============================================================================

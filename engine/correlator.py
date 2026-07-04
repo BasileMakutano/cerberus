@@ -81,7 +81,7 @@ import sqlite3
 from datetime import datetime, timezone
 
 from engine.db       import BASE_DIR, DB_PATH, get_db
-from engine.profiler import load_profiles, check_observation  # Layer 1
+from engine.profiler import load_profiles, check_frequency, check_observation  # Layer 1
 from engine.detector import score_observation                  # Layer 2
 
 
@@ -140,6 +140,16 @@ def _log(msg: str) -> None:
     with open(CORR_LOG_PATH, "a") as f:
         f.write(line)
     print(line, end="")
+
+
+def _severity_rank(severity: str) -> int:
+    return {"HIGH": 3, "MEDIUM": 2, "LOW": 1, "NONE": 0}.get(severity, 0)
+
+
+def _primary_trigger(triggers: list) -> dict:
+    if not triggers:
+        return {"type": "UNKNOWN"}
+    return max(triggers, key=lambda t: _severity_rank(TRIGGER_SEVERITY.get(t.get("type"), "LOW")))
 
 
 # =============================================================================
@@ -276,11 +286,23 @@ def correlate_observation(row: dict, baselines: dict, port_profiles: dict) -> di
     # ------------------------------------------------------------------
     l1_result  = check_observation(row, port_profiles)
 
+    current_count = row.get("current_hour_count")
+    if current_count is not None:
+        freq_trigger = check_frequency(port, int(current_count), port_profiles)
+        if freq_trigger:
+            triggers = list(l1_result.get("triggers", []))
+            triggers.append(freq_trigger)
+            l1_result["triggers"] = triggers
+            l1_result["flagged"] = True
+            if _severity_rank(l1_result.get("severity", "NONE")) < _severity_rank("MEDIUM"):
+                l1_result["severity"] = "MEDIUM"
+
     if not l1_result.get("flagged", False):
         return None
 
     triggers   = l1_result.get("triggers", [])
-    trigger    = triggers[0] if triggers else "UNKNOWN"  # primary trigger
+    primary    = _primary_trigger(triggers)
+    trigger    = primary.get("type", "UNKNOWN")
     l1_details = {
         "triggers":   triggers,
         "severity":   l1_result.get("severity",   "LOW"),
@@ -308,6 +330,7 @@ def correlate_observation(row: dict, baselines: dict, port_profiles: dict) -> di
 
     event = {
         "timestamp":         _now_iso(),
+        "observed_at":       str(row.get("timestamp", "")),
         "port":              port,
         "ip":                ip,
         "service":           str(row.get("service", "unknown")),
@@ -374,8 +397,22 @@ def correlate_recent(since_minutes: int = 10) -> list[dict]:
 
     _log(f"Correlating {len(rows)} observations from the last {since_minutes} min...")
 
+    counts_by_port_hour = {}
+    for row in rows:
+        try:
+            hour = datetime.fromisoformat(row["timestamp"]).strftime("%Y-%m-%dT%H")
+        except (TypeError, ValueError):
+            hour = "unknown"
+        key = (int(row.get("port", -1)), hour)
+        counts_by_port_hour[key] = counts_by_port_hour.get(key, 0) + 1
+
     events = []
     for row in rows:
+        try:
+            hour = datetime.fromisoformat(row["timestamp"]).strftime("%Y-%m-%dT%H")
+        except (TypeError, ValueError):
+            hour = "unknown"
+        row["current_hour_count"] = counts_by_port_hour.get((int(row.get("port", -1)), hour), 0)
         event = correlate_observation(row, baselines, port_profiles)
         if event is not None:
             events.append(event)

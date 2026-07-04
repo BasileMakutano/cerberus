@@ -15,7 +15,7 @@ Phases to be added:
     Phase 7 — Alerting + dashboard
 
 Usage:
-    ~/Documents/cerberus/venv/bin/python3 main.py
+    venv/bin/python3 main.py
 """
 
 import sys

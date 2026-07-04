@@ -45,6 +45,7 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 import json
 import uuid
+import hashlib
 from datetime import datetime, timezone
 
 from engine.db         import BASE_DIR
@@ -137,6 +138,18 @@ def _get_recommendation(trigger: str, severity: str) -> str:
     )
 
 
+def _event_fingerprint(event: dict) -> str:
+    key = {
+        "observed_at": event.get("observed_at") or event.get("timestamp"),
+        "port": event.get("port"),
+        "ip": event.get("ip"),
+        "trigger": event.get("layer1_trigger"),
+        "service": event.get("service"),
+    }
+    raw = json.dumps(key, sort_keys=True, default=str)
+    return hashlib.sha256(raw.encode("utf-8")).hexdigest()[:16]
+
+
 # =============================================================================
 # ALERT FORMATTING
 # =============================================================================
@@ -151,7 +164,9 @@ def _format_alert(event: dict) -> dict:
 
     return {
         "alert_id":          str(uuid.uuid4()),
+        "fingerprint":       _event_fingerprint(event),
         "timestamp":         event.get("timestamp", datetime.now(timezone.utc).isoformat()),
+        "observed_at":       event.get("observed_at"),
         "severity":          severity,
         "confirmed":         event.get("confirmed", False),
         "port":              event.get("port"),
@@ -190,6 +205,16 @@ def _save_alerts(alerts: list) -> None:
         json.dump(alerts, f, indent=2)
 
 
+def acknowledge_alert(alert_id: str, acknowledged: bool = True) -> dict:
+    alerts = _load_alerts()
+    for alert in alerts:
+        if alert.get("alert_id") == alert_id:
+            alert["acknowledged"] = acknowledged
+            _save_alerts(alerts)
+            return {"success": True, "alert": alert}
+    return {"success": False, "error": "Alert not found"}
+
+
 # =============================================================================
 # PUBLIC API
 # =============================================================================
@@ -216,7 +241,24 @@ def write_alerts(events: list, confirmed_only: bool = False) -> list:
         return []
 
     existing = _load_alerts()
-    new_alerts = [_format_alert(e) for e in events]
+    existing_fingerprints = {
+        a.get("fingerprint")
+        for a in existing
+        if a.get("fingerprint")
+    }
+
+    new_alerts = []
+    for event in events:
+        alert = _format_alert(event)
+        if alert["fingerprint"] in existing_fingerprints:
+            continue
+        existing_fingerprints.add(alert["fingerprint"])
+        new_alerts.append(alert)
+
+    if not new_alerts:
+        print("[*] No new alerts written; all flagged events were already recorded.")
+        return []
+
     _save_alerts(existing + new_alerts)
 
     print(f"[+] {len(new_alerts)} alert(s) written → {ALERTS_PATH}")

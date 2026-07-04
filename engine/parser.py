@@ -77,9 +77,43 @@ def _split_addr_port(addr_str: str) -> tuple:
             addr, port = addr_str.rsplit(":", 1)
         else:
             return addr_str, 0
+        if port == "*":
+            return addr, 0
         return addr, int(port)
     except ValueError:
         return addr_str, 0
+
+
+def _parse_ss_fields(line: str) -> dict | None:
+    parts = line.split()
+    if len(parts) < 5:
+        return None
+
+    netids = {"tcp", "udp", "raw", "u_str", "icmp"}
+    if parts[0].lower() in netids:
+        if len(parts) < 6:
+            return None
+        state = parts[1]
+        local_full = parts[4]
+        remote_full = parts[5]
+        process = " ".join(parts[6:]) if len(parts) > 6 else ""
+    else:
+        state = parts[0]
+        local_full = parts[3]
+        remote_full = parts[4]
+        process = " ".join(parts[5:]) if len(parts) > 5 else ""
+
+    local_addr, local_port = _split_addr_port(local_full)
+    remote_addr, remote_port = _split_addr_port(remote_full)
+
+    return {
+        "local_address": local_addr,
+        "local_port": local_port,
+        "remote_address": remote_addr,
+        "remote_port": remote_port,
+        "state": state,
+        "process": process,
+    }
 
 
 # =============================================================================
@@ -157,6 +191,33 @@ def _parse_nmap_xml(filepath: str) -> list:
     return rows
 
 
+def _nmap_xml_parse_status(filepath: str) -> str:
+    """
+    Classify an nmap XML file that produced no rows.
+
+    No-row scans are normal when --open finds no open ports or the host is down.
+    Malformed XML should remain unparsed so the operator can fix/regenerate it.
+    """
+    try:
+        tree = ET.parse(filepath)
+        root = tree.getroot()
+    except ET.ParseError:
+        return "invalid_xml"
+
+    finished = root.find("./runstats/finished")
+    if finished is not None and finished.get("exit") not in (None, "success"):
+        return "nmap_failed"
+
+    hosts = root.find("./runstats/hosts")
+    if hosts is not None and hosts.get("up") == "0":
+        return "host_down"
+
+    if not root.findall(".//port"):
+        return "no_open_ports"
+
+    return "no_rows"
+
+
 def ingest_nmap_scans() -> int:
     """
     Find all scan_*.xml files not yet in parsed_files.
@@ -184,7 +245,17 @@ def ingest_nmap_scans() -> int:
             total += len(rows)
             print(f"  [+] {os.path.basename(filepath)} → {len(rows)} rows")
         else:
-            print(f"  [!] {os.path.basename(filepath)} → empty or failed, skipped")
+            status = _nmap_xml_parse_status(filepath)
+            if status in ("host_down", "no_open_ports", "no_rows"):
+                mark_parsed(os.path.basename(filepath))
+                reason = {
+                    "host_down": "target down",
+                    "no_open_ports": "no open monitored ports",
+                    "no_rows": "no usable port rows",
+                }[status]
+                print(f"  [~] {os.path.basename(filepath)} → {reason}; marked parsed")
+            else:
+                print(f"  [!] {os.path.basename(filepath)} → {status}; skipped")
 
     conn.close()
     print(f"[+] Nmap ingestion complete: {total} rows inserted")
@@ -240,28 +311,18 @@ def _parse_conn_log(filepath: str) -> list:
         if not line or line.startswith("---") or line.startswith("Netid"):
             continue
 
-        # ss output line:
-        # State  Recv-Q  Send-Q  Local:Port  Peer:Port  [Process]
-        parts = line.split()
-        if len(parts) < 5:
+        parsed = _parse_ss_fields(line)
+        if parsed is None:
             continue
-
-        state       = parts[0]
-        local_full  = parts[3]
-        remote_full = parts[4]
-        process     = parts[5] if len(parts) > 5 else ""
-
-        local_addr,  local_port  = _split_addr_port(local_full)
-        remote_addr, remote_port = _split_addr_port(remote_full)
 
         rows.append({
             "timestamp":      timestamp or datetime.now().isoformat(),
-            "local_address":  local_addr,
-            "local_port":     local_port,
-            "remote_address": remote_addr,
-            "remote_port":    remote_port,
-            "state":          state,
-            "process":        process,
+            "local_address":  parsed["local_address"],
+            "local_port":     parsed["local_port"],
+            "remote_address": parsed["remote_address"],
+            "remote_port":    parsed["remote_port"],
+            "state":          parsed["state"],
+            "process":        parsed["process"],
             "parsed_at":      datetime.now().isoformat(),
         })
 
