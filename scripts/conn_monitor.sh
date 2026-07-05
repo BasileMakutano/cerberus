@@ -1,14 +1,7 @@
 #!/bin/bash
-# =============================================================================
-# Cerberus — conn_monitor.sh
-# Captures a snapshot of all active and listening connections every 5 minutes.
-# Output: timestamped log files in data/connections/
-# Uses: ss (socket statistics) — available on all modern Linux systems
-# =============================================================================
 
 TIMESTAMP=$(date +%Y%m%d_%H%M%S)
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-CERBERUS_DIR="${CERBERUS_DIR:-$(cd "$SCRIPT_DIR/.." && pwd)}"
+CERBERUS_DIR="/home/blessing/Documents/cerberus"
 OUTPUT_DIR="$CERBERUS_DIR/data/connections"
 LOG_FILE="$CERBERUS_DIR/logs/recon.log"
 
@@ -17,7 +10,7 @@ mkdir -p "$(dirname "$LOG_FILE")"
 
 OUTFILE="$OUTPUT_DIR/conn_${TIMESTAMP}.log"
 
-# Header — parser.py reads this to know when the snapshot was taken
+    # Header parser.py will read this to know when the snapshot was taken
 echo "=== TIMESTAMP: $TIMESTAMP ===" > "$OUTFILE"
 echo "" >> "$OUTFILE"
 

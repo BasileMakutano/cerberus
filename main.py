@@ -1,22 +1,3 @@
-"""
-Cerberus — main.py
-Entry point. Runs the full pipeline in sequence.
-
-Phases implemented:
-    Phase 1 — Bash scripts (run via cron automatically)
-    Phase 2 — Database init + live scan parser
-    Phase 3 — Dataset cleaner (comment out after first run)
-    Phase 4a — Behavioural profiler (port_profiles.json)
-    Phase 4b — Statistical baseline engine (baselines.json)
-
-Phases to be added:
-    Phase 5 — Per-port Isolation Forest ML models
-    Phase 6 — Correlation engine (profiler + baseline + ML)
-    Phase 7 — Alerting + dashboard
-
-Usage:
-    venv/bin/python3 main.py
-"""
 
 import sys
 import os

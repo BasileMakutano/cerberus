@@ -139,10 +139,13 @@ def _get_recommendation(trigger: str, severity: str) -> str:
 
 
 def _event_fingerprint(event: dict) -> str:
+    # Fingerprint on port + IP + trigger only — not timestamp.
+    # This deduplicates repeated alerts for the same anomaly across
+    # multiple scan cycles, preventing the same event being written
+    # once per SQLite row rather than once per unique threat pattern.
     key = {
-        "observed_at": event.get("observed_at") or event.get("timestamp"),
-        "port": event.get("port"),
-        "ip": event.get("ip"),
+        "port":    event.get("port"),
+        "ip":      event.get("ip"),
         "trigger": event.get("layer1_trigger"),
         "service": event.get("service"),
     }
@@ -153,29 +156,48 @@ def _event_fingerprint(event: dict) -> str:
 # =============================================================================
 # ALERT FORMATTING
 # =============================================================================
+def _clean_for_json(obj):
+    """Recursively cast numpy types to native Python so json.dump never fails."""
+    import numpy as np
+    if isinstance(obj, dict):
+        return {k: _clean_for_json(v) for k, v in obj.items()}
+    if isinstance(obj, list):
+        return [_clean_for_json(i) for i in obj]
+    if isinstance(obj, np.integer):
+        return int(obj)
+    if isinstance(obj, np.floating):
+        return float(obj)
+    if isinstance(obj, np.bool_):
+        return bool(obj)
+    return obj
 
 def _format_alert(event: dict) -> dict:
-    """
-    Convert a correlator threat event into a structured alert record.
-    Adds alert_id, recommendation, and acknowledged fields.
-    """
-    trigger  = event.get("layer1_trigger", "UNKNOWN")
-    severity = event.get("severity", "LOW")
+    trigger  = str(event.get("layer1_trigger", "UNKNOWN"))
+    severity = str(event.get("severity", "LOW"))
+
+    # Cast all numeric fields to native Python types to prevent
+    # numpy serialization errors when json.dump writes alerts.json.
+    port  = int(event.get("port", 0))         if event.get("port")         is not None else None
+    score = float(event.get("layer2_score"))  if event.get("layer2_score") is not None else None
+    confirmed = bool(event.get("confirmed", False))
+
+    # Deep-clean layer1_details — profiler may return numpy bools/ints
+    l1_details = _clean_for_json(event.get("layer1_details", {}))
 
     return {
         "alert_id":          str(uuid.uuid4()),
         "fingerprint":       _event_fingerprint(event),
         "timestamp":         event.get("timestamp", datetime.now(timezone.utc).isoformat()),
-        "observed_at":       event.get("observed_at"),
+        "observed_at":       str(event.get("observed_at", "")),
         "severity":          severity,
-        "confirmed":         event.get("confirmed", False),
-        "port":              event.get("port"),
-        "ip":                event.get("ip"),
-        "service":           event.get("service"),
+        "confirmed":         confirmed,
+        "port":              port,
+        "ip":                str(event.get("ip", "")),
+        "service":           str(event.get("service", "")),
         "layer1_trigger":    trigger,
-        "layer1_details":    event.get("layer1_details", {}),
-        "layer2_score":      event.get("layer2_score"),
-        "layer2_confidence": event.get("layer2_confidence"),
+        "layer1_details":    l1_details,
+        "layer2_score":      score,
+        "layer2_confidence": str(event.get("layer2_confidence", "")),
         "recommendation":    _get_recommendation(trigger, severity),
         "acknowledged":      False,
     }
@@ -200,9 +222,21 @@ def _load_alerts() -> list:
 
 def _save_alerts(alerts: list) -> None:
     """Write the full alerts list back to alerts.json."""
+    import numpy as np
+
+    class _NumpyEncoder(json.JSONEncoder):
+        def default(self, obj):
+            if isinstance(obj, np.integer):
+                return int(obj)
+            if isinstance(obj, np.floating):
+                return float(obj)
+            if isinstance(obj, np.bool_):
+                return bool(obj)
+            return super().default(obj)
+
     os.makedirs(os.path.dirname(ALERTS_PATH), exist_ok=True)
     with open(ALERTS_PATH, "w") as f:
-        json.dump(alerts, f, indent=2)
+        json.dump(alerts, f, indent=2, cls=_NumpyEncoder)
 
 
 def acknowledge_alert(alert_id: str, acknowledged: bool = True) -> dict:

@@ -97,7 +97,7 @@ EVAL_PATH     = os.path.join(BASE_DIR, "models", "evaluation.json")
 MIN_TRAIN_ROWS = 50
 
 IF_PARAMS = {
-    "contamination": 0.05,
+    "contamination": 0.1,
     "n_estimators":  100,
     "random_state":  42,
     "n_jobs":        -1,

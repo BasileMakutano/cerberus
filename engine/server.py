@@ -241,9 +241,11 @@ def _tail_log(path: str, lines: int = 100) -> str:
 def _load_json_file(path: str):
     if not os.path.exists(path):
         return None
-    with open(path) as f:
-        return json.load(f)
-
+    try:
+        with open(path) as f:
+            return json.load(f)
+    except (json.JSONDecodeError, IOError):
+        return None
 
 def _run_scan() -> dict:
     """Run nmap_scan.sh via passwordless sudoers rule."""

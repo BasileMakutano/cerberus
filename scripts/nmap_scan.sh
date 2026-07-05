@@ -11,7 +11,7 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 CERBERUS_DIR="${CERBERUS_DIR:-$(cd "$SCRIPT_DIR/.." && pwd)}"
 OUTPUT_DIR="$CERBERUS_DIR/data/scans"
 LOG_FILE="$CERBERUS_DIR/logs/recon.log"
-TARGET="192.168.100.37"
+TARGET="127.0.0.1"
 
 # 25 critical ports as defined in the concept note
 PORTS="21,22,23,25,53,80,110,135,139,143,443,445,\
