@@ -48,7 +48,6 @@ import traceback
 from datetime import datetime, timezone
 
 from flask import Flask, jsonify, send_from_directory, request
-from flask_cors import CORS
 
 from engine.config import (
     ALERTS_PATH,
@@ -87,9 +86,18 @@ SETTINGS_PATH = str(SETTINGS_PATH)
 DB_PATH = str(DB_PATH)
 
 app = Flask(__name__, static_folder=None)
-CORS(app, resources={
-    r"/api/*": {"origins": ["http://127.0.0.1:5000", "http://localhost:5000"]}
-})
+ALLOWED_ORIGINS = {"http://127.0.0.1:5000", "http://localhost:5000"}
+
+
+@app.after_request
+def add_cors_headers(response):
+    origin = request.headers.get("Origin")
+    if origin in ALLOWED_ORIGINS and request.path.startswith("/api/"):
+        response.headers["Access-Control-Allow-Origin"] = origin
+        response.headers["Vary"] = "Origin"
+        response.headers["Access-Control-Allow-Methods"] = "GET, POST, PATCH, DELETE, OPTIONS"
+        response.headers["Access-Control-Allow-Headers"] = "Content-Type"
+    return response
 
 
 # =============================================================================
@@ -227,7 +235,7 @@ def _safe_preview(result) -> str:
     return s[:500] + ("…" if len(s) > 500 else "")
 
 
-def _tail_log(path: str, lines: int = 100) -> str:
+def _tail_log(path: str | os.PathLike[str], lines: int = 100) -> str:
     if not os.path.exists(path):
         return ""
     try:
@@ -238,7 +246,7 @@ def _tail_log(path: str, lines: int = 100) -> str:
         return ""
 
 
-def _load_json_file(path: str):
+def _load_json_file(path: str | os.PathLike[str]):
     if not os.path.exists(path):
         return None
     try:
