@@ -1,15 +1,4 @@
-"""
-Cerberus — engine/parser.py
 
-Reads raw files produced by Phase 1 Bash scripts and inserts
-structured rows into SQLite via engine/db.py.
-
-Two parsers:
-    ingest_nmap_scans()  — reads scan_*.xml  → port_observations
-    ingest_conn_logs()   — reads conn_*.log  → connection_snapshots
-
-Both are idempotent: files already in parsed_files are skipped.
-"""
 
 import xml.etree.ElementTree as ET
 import pandas as pd
@@ -38,15 +27,6 @@ CONNS_DIR = os.path.join(BASE_DIR, "data", "connections")
 # =============================================================================
 
 def _timestamp_from_filename(filename: str) -> str:
-    """
-    Extract a datetime from a Cerberus filename.
-
-    scan_20260429_080000.xml  →  '2026-04-29T08:00:00'
-    conn_20260429_080000.log  →  '2026-04-29T08:00:00'
-
-    Falls back to now() if the filename doesn't match the expected pattern.
-    This ensures every row always has a timestamp, even in edge cases.
-    """
     base = os.path.basename(filename)
     try:
         # Strip extension, split on underscore
@@ -59,16 +39,6 @@ def _timestamp_from_filename(filename: str) -> str:
 
 
 def _split_addr_port(addr_str: str) -> tuple:
-    """
-    Split a combined address:port string into (address, port).
-
-    Handles:
-        IPv4  →  '192.168.1.1:443'     →  ('192.168.1.1', 443)
-        IPv6  →  '[::1]:80'            →  ('[::1]', 80)
-        No port found                  →  (addr_str, 0)
-
-    Returns port as int. Returns 0 if port cannot be parsed.
-    """
     try:
         if addr_str.startswith("["):
             # IPv6: the port comes after the closing bracket
@@ -121,25 +91,6 @@ def _parse_ss_fields(line: str) -> dict | None:
 # =============================================================================
 
 def _parse_nmap_xml(filepath: str) -> list:
-    """
-    Parse one nmap XML file and return a list of row dicts.
-
-    nmap's XML structure:
-        <nmaprun>
-            <host>
-                <address addr="127.0.0.1"/>
-                <ports>
-                    <port portid="80" protocol="tcp">
-                        <state state="open"/>
-                        <service name="http" product="Apache" version="2.4"/>
-                    </port>
-                </ports>
-            </host>
-        </nmaprun>
-
-    We walk this tree and extract one dict per open port per host.
-    Returns [] if the file is malformed or contains no open ports.
-    """
     timestamp = _timestamp_from_filename(filepath)
     rows      = []
 
@@ -192,12 +143,6 @@ def _parse_nmap_xml(filepath: str) -> list:
 
 
 def _nmap_xml_parse_status(filepath: str) -> str:
-    """
-    Classify an nmap XML file that produced no rows.
-
-    No-row scans are normal when --open finds no open ports or the host is down.
-    Malformed XML should remain unparsed so the operator can fix/regenerate it.
-    """
     try:
         tree = ET.parse(filepath)
         root = tree.getroot()
@@ -219,13 +164,6 @@ def _nmap_xml_parse_status(filepath: str) -> str:
 
 
 def ingest_nmap_scans() -> int:
-    """
-    Find all scan_*.xml files not yet in parsed_files.
-    Parse each and insert rows into port_observations.
-    Mark each file as parsed when done.
-
-    Returns total number of rows inserted.
-    """
     files     = sorted(glob.glob(os.path.join(SCANS_DIR, "scan_*.xml")))
     new_files = [f for f in files if not already_parsed(os.path.basename(f))]
 
@@ -267,23 +205,6 @@ def ingest_nmap_scans() -> int:
 # =============================================================================
 
 def _parse_conn_log(filepath: str) -> list:
-    """
-    Parse one ss connection snapshot written by conn_monitor.sh.
-
-    Expected file format:
-        === TIMESTAMP: 20260429_080000 ===
-
-        --- LISTENING PORTS ---
-        Netid  State   Recv-Q  Send-Q  Local Address:Port  Peer Address:Port
-        tcp    LISTEN  0       128     0.0.0.0:22          0.0.0.0:*
-
-        --- ACTIVE CONNECTIONS ---
-        ...
-
-    We extract the timestamp from the header line, then parse
-    each ss output line into address, port, state, and process fields.
-    Returns [] if the file cannot be read or contains no valid lines.
-    """
     timestamp = None
     rows      = []
 
@@ -330,13 +251,6 @@ def _parse_conn_log(filepath: str) -> list:
 
 
 def ingest_conn_logs() -> int:
-    """
-    Find all conn_*.log files not yet in parsed_files.
-    Parse each and insert rows into connection_snapshots.
-    Mark each file as parsed when done.
-
-    Returns total number of rows inserted.
-    """
     files     = sorted(glob.glob(os.path.join(CONNS_DIR, "conn_*.log")))
     new_files = [f for f in files if not already_parsed(os.path.basename(f))]
 

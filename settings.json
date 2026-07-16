@@ -1,6 +1,6 @@
 {
   "target_ip": "127.0.0.1",
-  "scan_interval": 3,
+  "scan_interval": 2,
   "confirmed_only": false,
-  "lookback_minutes": 60
+  "lookback_minutes": 600
 }

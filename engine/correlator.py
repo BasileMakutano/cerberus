@@ -1,76 +1,4 @@
-"""
-Cerberus — engine/correlator.py
-Phase 6: Correlation Engine.
 
-This module is the intelligence layer of Cerberus. It connects the two
-detection layers into a single, coherent decision pipeline and produces
-confirmed threat events for the alerter.
-
-Architecture:
-    New observation (live SQLite row)
-            ↓
-    Layer 1 — profiler.py
-        Checks: unknown port, unknown IP, wrong service, wrong protocol,
-                frequency spike. Flags if any rule fires.
-            ↓ flagged?
-    Layer 2 — detector.py → score_observation()
-        Confirms: is this statistically anomalous vs learned normal
-                  behaviour for this specific port?
-            ↓ confirmed?
-    Threat event dict → alerter.py
-
-Decision logic:
-    Both layers flag  → confirmed=True,  alert sent
-    Layer 1 only      → confirmed=False, logged as low-confidence
-    Neither flags     → logged as normal, discarded
-
-Why require both layers?
-    Layer 1 (behavioural) has high recall but can produce false positives
-    when a new legitimate service appears on the network. Layer 2 (ML)
-    acts as a statistical gatekeeper — it only confirms events that are
-    also anomalous in the feature space learned from normal traffic.
-    Requiring both layers reduces false positives without sacrificing
-    recall on genuine reconnaissance activity.
-
-    This dual-confirmation design is directly motivated by Bhuyan,
-    Bhattacharyya and Kalita (2014), who demonstrated that hybrid
-    approaches combining statistical and rule-based methods outperform
-    either approach in isolation on real-world network data.
-
-Severity derivation:
-    Severity is derived from the Layer 1 trigger type and the Layer 2
-    anomaly score together:
-
-        HIGH   — Layer 2 score ≤ threshold - 0.05  (deep into anomaly region)
-                 OR trigger is UNKNOWN_PORT / NEW_PORT_EXPOSURE
-        MEDIUM — Layer 2 score between threshold and threshold - 0.05
-                 OR trigger is WRONG_SERVICE / WRONG_PROTOCOL
-        LOW    — Layer 2 score near threshold (borderline)
-                 OR trigger is FREQUENCY_SPIKE / UNKNOWN_IP
-
-    This graduated scheme ensures that a port scanner hitting an
-    unexpected service is treated more seriously than a simple frequency
-    spike, which may have innocent explanations.
-
-Layer 2 confidence:
-    HIGH   — score ≤ threshold - 0.05
-    MEDIUM — score between threshold - 0.05 and threshold
-    LOW    — score within 0.01 of threshold (borderline case)
-
-Output format (per confirmed or low-confidence event):
-    {
-        "timestamp":         str   ISO 8601
-        "port":              int
-        "ip":                str
-        "service":           str
-        "layer1_trigger":    str   e.g. "UNKNOWN_IP", "WRONG_SERVICE"
-        "layer1_details":    dict  raw profiler output for this observation
-        "layer2_score":      float anomaly score from Isolation Forest
-        "layer2_confidence": str   HIGH / MEDIUM / LOW / NO_MODEL
-        "severity":          str   HIGH / MEDIUM / LOW
-        "confirmed":         bool  True = both layers agree
-    }
-"""
 
 import sys
 import os
@@ -81,8 +9,14 @@ import sqlite3
 from datetime import datetime, timezone
 
 from engine.db       import BASE_DIR, DB_PATH, get_db
-from engine.profiler import load_profiles, check_frequency, check_observation  # Layer 1
-from engine.detector import score_observation                  # Layer 2
+from engine.profiler import (
+    load_profiles,
+    check_observation,
+    check_frequency,
+    detect_port_scan,
+)
+  # Layer 1
+from engine.detector import score_observation                                   # Layer 2
 
 
 # =============================================================================
@@ -97,21 +31,23 @@ CORR_LOG_PATH     = os.path.join(BASE_DIR, "logs", "correlation.log")
 # CONSTANTS
 # =============================================================================
 
-# Layer 2 score margin below model.offset_ that determines confidence tier.
-# Isolation Forest score_samples() → more negative = more anomalous.
-# offset_ is the decision boundary set by contamination=0.05.
+
 SCORE_HIGH_MARGIN   = 0.05   # score ≤ threshold - 0.05 → HIGH confidence
 SCORE_MEDIUM_MARGIN = 0.01   # score ≤ threshold - 0.01 → MEDIUM confidence
 
-# Layer 1 trigger severity weights — keys must match trigger strings
-# emitted by profiler.check_observation() exactly.
+
 TRIGGER_SEVERITY = {
-    "UNKNOWN_PORT":   "HIGH",
-    "WRONG_SERVICE":  "HIGH",
-    "UNKNOWN_IP":     "MEDIUM",
+    "UNKNOWN_PORT": "HIGH",
+    "WRONG_SERVICE": "HIGH",
+    "SCAN_DETECTED": "HIGH",
+    "UNKNOWN_IP": "MEDIUM",
+    "UNKNOWN_REMOTE_IP": "MEDIUM",
     "FREQUENCY_SPIKE": "MEDIUM",
     "WRONG_PROTOCOL": "MEDIUM",
-    "NEW_VERSION":    "LOW",
+    "NEW_VERSION": "LOW",
+}
+TRIGGER_ALIASES = {
+    "UNKNOWN_REMOTE_IP": "UNKNOWN_IP"
 }
 
 
@@ -122,6 +58,25 @@ TRIGGER_SEVERITY = {
 def _now_iso() -> str:
     return datetime.now(timezone.utc).isoformat()
 
+def _connection_frequency(ip: str, port: int) -> int:
+    conn = get_db()
+
+    cur = conn.cursor()
+
+    cur.execute("""
+        SELECT COUNT(*)
+        FROM connection_snapshots
+        WHERE remote_address = ?
+        AND local_port = ?
+        AND datetime(timestamp)
+            >= datetime('now','-60 minutes')
+    """,(ip, port))
+
+    count = cur.fetchone()[0]
+
+    conn.close()
+
+    return count
 
 def _load_baselines() -> dict:
     if not os.path.exists(BASELINES_PATH):
@@ -142,14 +97,21 @@ def _log(msg: str) -> None:
     print(line, end="")
 
 
-def _severity_rank(severity: str) -> int:
-    return {"HIGH": 3, "MEDIUM": 2, "LOW": 1, "NONE": 0}.get(severity, 0)
-
-
-def _primary_trigger(triggers: list) -> dict:
-    if not triggers:
-        return {"type": "UNKNOWN"}
-    return max(triggers, key=lambda t: _severity_rank(TRIGGER_SEVERITY.get(t.get("type"), "LOW")))
+def _load_recent_connections(since_minutes: int) -> list:
+    conn   = get_db()
+    cursor = conn.cursor()
+    cursor.execute("""
+        SELECT timestamp, local_port, remote_address, state
+        FROM connection_snapshots
+        WHERE datetime(timestamp) >= datetime('now', ?)
+        ORDER BY timestamp ASC
+    """, (f"-{since_minutes} minutes",))
+    rows = [
+        dict(zip([c[0] for c in cursor.description], r))
+        for r in cursor.fetchall()
+    ]
+    conn.close()
+    return rows
 
 
 # =============================================================================
@@ -157,19 +119,7 @@ def _primary_trigger(triggers: list) -> dict:
 # =============================================================================
 
 def _layer2_confidence(score: float, threshold: float) -> str:
-    """
-    Translate a raw Isolation Forest score into a human-readable
-    confidence tier.
-
-    The threshold (model.offset_) is the decision boundary set by
-    contamination=0.05. Points below it are anomalies.
-
-        score ≤ threshold - SCORE_HIGH_MARGIN   → HIGH
-        score ≤ threshold - SCORE_MEDIUM_MARGIN → MEDIUM
-        score < threshold                        → LOW
-        score ≥ threshold                        → (should not reach here,
-                                                    Layer 2 would not flag)
-    """
+    
     if score is None:
         return "NO_MODEL"
     if score <= threshold - SCORE_HIGH_MARGIN:
@@ -180,20 +130,8 @@ def _layer2_confidence(score: float, threshold: float) -> str:
 
 
 def _derive_severity(trigger: str, l2_confidence: str) -> str:
-    """
-    Combine Layer 1 trigger type with Layer 2 confidence to produce
-    a final severity rating for the threat event.
+    trigger = TRIGGER_ALIASES.get(trigger, trigger)
 
-    Escalation rules:
-        - If Layer 1 trigger is HIGH and Layer 2 is HIGH → HIGH
-        - If either is HIGH → MEDIUM minimum
-        - If both are LOW → LOW
-        - NO_MODEL (no trained model for this port) → use Layer 1 only
-
-    This ensures that a WRONG_SERVICE observation confirmed by a high
-    ML anomaly score is treated more seriously than the same trigger
-    confirmed at LOW confidence.
-    """
     l1_sev = TRIGGER_SEVERITY.get(trigger, "LOW")
 
     tier = {"HIGH": 3, "MEDIUM": 2, "LOW": 1}
@@ -205,6 +143,7 @@ def _derive_severity(trigger: str, l2_confidence: str) -> str:
     l2_score = tier.get(l2_confidence, 1)
 
     combined = (l1_score + l2_score) // 2
+
     if l1_score == 3 and l2_score == 3:
         combined = 3
 
@@ -214,28 +153,31 @@ def _derive_severity(trigger: str, l2_confidence: str) -> str:
 # =============================================================================
 # OBSERVATION BUILDER
 # =============================================================================
+def _get_recent_source_port(ip: str, port: int) -> int:
+    conn = get_db()
+
+    cur = conn.cursor()
+
+    cur.execute("""
+        SELECT remote_port
+        FROM connection_snapshots
+        WHERE remote_address = ?
+        AND local_port = ?
+        AND remote_port > 0
+        ORDER BY timestamp DESC
+        LIMIT 1
+    """, (ip, port))
+
+    row = cur.fetchone()
+
+    conn.close()
+
+    if row:
+        return int(row[0])
+
+    return 49152
 
 def _build_observation(row: dict, baselines: dict) -> dict:
-    """
-    Convert a raw SQLite port_observations row into the feature dict
-    expected by Layer 2 (score_observation).
-
-    Protocol encoding:
-        0 = ICMP
-        1 = TCP
-        2 = UDP
-        3 = ARP
-        4 = TLS
-        5 = other
-
-    Length:
-        SQLite rows do not carry packet length — this field comes from
-        tcpdump / combined_normal.csv training data. For live inference
-        we use the baseline mean length for this port as a proxy.
-        This is a known limitation: the ML score will be less sensitive
-        to length-based anomalies until tcpdump parsing is integrated
-        in a future phase.
-    """
     protocol_map = {
         "ICMP": 0, "TCP": 1, "UDP": 2,
         "ARP":  3, "TLS": 4,
@@ -249,100 +191,127 @@ def _build_observation(row: dict, baselines: dict) -> dict:
     length_info = baseline.get("length", {})
     mean_length = length_info.get("mean", 0.0) if length_info.get("available") else 0.0
 
+    source_port = _get_recent_source_port(
+    str(row.get("ip", "")),
+    port
+)
+
     return {
-        "length":       mean_length,
-        "source_port":  0,           # not available from nmap/ss rows
-        "dest_port":    port,
-        "protocol_enc": proto_enc,
-    }
+    "port": port,
+    "ip": str(row.get("ip", "")),
+    "service": str(row.get("service", "")),
+    "protocol": str(row.get("protocol", "")),
+    "version": str(row.get("version", "")),
+
+    "length": mean_length,
+    "source_port": source_port,
+    "dest_port": port,
+    "protocol_enc": proto_enc,
+}
+
 
 
 # =============================================================================
-# CORE CORRELATION LOGIC
+# CORE CORRELATION LOGIC — per-port (Layer 1 + Layer 2)
 # =============================================================================
 
 def correlate_observation(row: dict, baselines: dict, port_profiles: dict) -> dict | None:
-    """
-    Run one SQLite observation through both detection layers.
-
-    Parameters:
-        row           : dict from port_observations table
-        baselines     : loaded baselines.json (int-keyed)
-        port_profiles : loaded port_profiles.json via profiler.load_profiles()
-
-    Returns:
-        Threat event dict if Layer 1 fires, None if observation is clean.
-        The 'confirmed' field distinguishes dual-layer vs single-layer flags.
-    """
     port = int(row.get("port", -1))
-    ip   = str(row.get("ip",   "unknown"))
+    ip   = str(row.get("ip", "unknown"))
 
-    # ------------------------------------------------------------------
-    # Layer 1 — Behavioural profiler
-    # check_observation() returns:
-    #   { flagged, severity, triggers (list), confidence, port }
-    # We take the highest-severity trigger as the primary trigger string
-    # for downstream severity derivation and alert labelling.
-    # ------------------------------------------------------------------
-    l1_result  = check_observation(row, port_profiles)
+    l1_result = check_observation(row, port_profiles)
 
-    current_count = row.get("current_hour_count")
-    if current_count is not None:
-        freq_trigger = check_frequency(port, int(current_count), port_profiles)
-        if freq_trigger:
-            triggers = list(l1_result.get("triggers", []))
-            triggers.append(freq_trigger)
-            l1_result["triggers"] = triggers
-            l1_result["flagged"] = True
-            if _severity_rank(l1_result.get("severity", "NONE")) < _severity_rank("MEDIUM"):
-                l1_result["severity"] = "MEDIUM"
-
-    if not l1_result.get("flagged", False):
+    if not l1_result:
         return None
 
-    triggers   = l1_result.get("triggers", [])
-    primary    = _primary_trigger(triggers)
-    trigger    = primary.get("type", "UNKNOWN")
-    l1_details = {
-        "triggers":   triggers,
-        "severity":   l1_result.get("severity",   "LOW"),
-        "confidence": l1_result.get("confidence", "UNKNOWN"),
+    freq_result = {"flagged": False, "triggers": []}
+
+    if "current_hour_count" in row:
+        row["current_hour_count"] = _connection_frequency(
+    ip,
+    port
+)
+    freq_result = check_frequency(
+    port,
+    row["current_hour_count"],
+    port_profiles,
+)
+
+    if freq_result is None:
+        freq_result = {
+        "flagged": False,
+        "triggers": [],
+        "severity": "LOW", 
+        "confidence": "LOW"
     }
 
-    # ------------------------------------------------------------------
-    # Layer 2 — Isolation Forest
-    # ------------------------------------------------------------------
-    observation  = _build_observation(row, baselines)
-    l2_result    = score_observation(observation, port)
+    triggers = []
 
-    l2_score     = l2_result.get("score")
+    if l1_result.get("flagged", False):
+        triggers.extend(l1_result.get("triggers", []))
+
+    if freq_result and freq_result.get("flagged", False):
+        triggers.extend(freq_result.get("triggers", []))
+
+    if not triggers:
+        return None
+
+    primary = triggers[0]
+
+    if isinstance(primary, dict):
+        trigger = primary.get("type", "UNKNOWN")
+    else:
+        trigger = str(primary)
+
+    severity_rank = {"LOW": 1, "MEDIUM": 2, "HIGH": 3}
+
+    l1_severity = l1_result.get("severity", "LOW")
+    freq_severity = freq_result.get("severity", "LOW")
+
+    layer1_severity = max(
+        [l1_severity, freq_severity],
+        key=lambda x: severity_rank.get(x, 1)
+    )
+
+    l1_details = {
+        "triggers": triggers,
+        "severity": layer1_severity,
+        "confidence": l1_result.get("confidence", "UNKNOWN")
+    }
+
+    observation = _build_observation(row, baselines)
+    l2_result = score_observation(observation, port)
+
+    l2_score = l2_result.get("score")
     l2_threshold = l2_result.get("threshold")
-    l2_anomaly   = l2_result.get("anomaly", False)
+    l2_anomaly = l2_result.get("anomaly", False)
     model_status = l2_result.get("model_status", "no_model")
 
-    l2_confidence = _layer2_confidence(l2_score, l2_threshold) \
-                    if (l2_score is not None and l2_threshold is not None) \
-                    else "NO_MODEL"
+    l2_confidence = (
+        _layer2_confidence(l2_score, l2_threshold)
+        if l2_score is not None and l2_threshold is not None
+        else "NO_MODEL"
+    )
 
     confirmed = l2_anomaly if model_status == "ok" else False
 
     severity = _derive_severity(trigger, l2_confidence)
 
     event = {
-        "timestamp":         _now_iso(),
-        "observed_at":       str(row.get("timestamp", "")),
-        "port":              port,
-        "ip":                ip,
-        "service":           str(row.get("service", "unknown")),
-        "layer1_trigger":    trigger,
-        "layer1_details":    l1_details,
-        "layer2_score":      round(l2_score, 6) if l2_score is not None else None,
+        "timestamp": _now_iso(),
+        "port": port,
+        "ip": ip,
+        "service": str(row.get("service", "unknown")),
+        "layer1_trigger": trigger,
+        "layer1_details": l1_details,
+        "layer2_score": round(l2_score, 6) if l2_score is not None else None,
         "layer2_confidence": l2_confidence,
-        "severity":          severity,
-        "confirmed":         confirmed,
+        "severity": severity,
+        "confirmed": confirmed
     }
 
     status = "CONFIRMED" if confirmed else "LOW-CONFIDENCE"
+
     _log(
         f"{status} | port={port} ip={ip} "
         f"trigger={trigger} l2={l2_confidence} severity={severity}"
@@ -350,28 +319,67 @@ def correlate_observation(row: dict, baselines: dict, port_profiles: dict) -> di
 
     return event
 
+# =============================================================================
+# CROSS-PORT PATTERN — vertical scan detection
+# =============================================================================
+
+def _correlate_scan_events(since_minutes: int) -> list[dict]:
+    conn_rows = _load_recent_connections(since_minutes)
+    if not conn_rows:
+        return []
+    
+    print("\nCONN ROWS:", len(conn_rows))
+
+    for r in conn_rows[-10:]:
+            print(r)
+    scan_hits = detect_port_scan(
+    conn_rows,
+    monitored_ports={
+        21,22,23,25,53,80,110,
+        135,139,143,443,445,
+        1433,1521,3306,3389,
+        5432,5900,6379,8080,
+        8443,8888,9200,27017,
+        2181
+    }
+)
+    events = []
+
+    for hit in scan_hits:
+        event = {
+            "timestamp":         _now_iso(),
+            "port":              None,
+            "ip":                hit["ip"],
+            "service":           "multiple",
+            "layer1_trigger":    "SCAN_DETECTED",
+            "layer1_details": {
+                "triggers": [{
+                    "type":   "SCAN_DETECTED",
+                    "detail": hit["detail"],
+                    "ports":  hit["ports"],
+                }],
+                "severity":   "HIGH",
+                "confidence": "HIGH",
+            },
+            "layer2_score":      None,
+            "layer2_confidence": "NO_MODEL",
+            "severity":          "HIGH",
+            "confirmed":         True,
+        }
+        events.append(event)
+        _log(
+            f"CONFIRMED | SCAN_DETECTED | ip={hit['ip']} "
+            f"ports={hit['ports']} severity=HIGH"
+        )
+
+    return events
+
 
 # =============================================================================
 # BATCH MODE — scan all recent observations from SQLite
 # =============================================================================
 
 def correlate_recent(since_minutes: int = 10) -> list[dict]:
-    """
-    Pull all port_observations from the last N minutes and run each
-    through the correlation pipeline.
-
-    Parameters:
-        since_minutes : look-back window in minutes (default 10)
-
-    Returns:
-        List of threat event dicts (confirmed and low-confidence combined).
-        Confirmed events have confirmed=True; callers should filter by this
-        field when deciding what to send to the alerter.
-
-    Called by:
-        - main.py (scheduled loop)
-        - alerter.py (when building the alert queue)
-    """
     baselines     = _load_baselines()
     port_profiles = load_profiles()
 
@@ -379,11 +387,23 @@ def correlate_recent(since_minutes: int = 10) -> list[dict]:
     cursor = conn.cursor()
 
     cursor.execute("""
-        SELECT id, timestamp, ip, port, protocol, state, service, version
-        FROM port_observations
-        WHERE datetime(timestamp) >= datetime('now', ?)
-        ORDER BY timestamp ASC
-    """, (f"-{since_minutes} minutes",))
+    SELECT
+        id,
+        timestamp,
+        ip,
+        port,
+        protocol,
+        state,
+        service,
+        version,
+        COUNT(*) OVER (
+            PARTITION BY port, ip
+        ) AS current_hour_count
+    FROM port_observations
+    WHERE datetime(timestamp) >= datetime('now', ?)
+    ORDER BY timestamp ASC
+""", (f"-{since_minutes} minutes",))
+
 
     rows = [
         dict(zip([c[0] for c in cursor.description], r))
@@ -391,38 +411,29 @@ def correlate_recent(since_minutes: int = 10) -> list[dict]:
     ]
     conn.close()
 
-    if not rows:
-        _log(f"No observations in the last {since_minutes} minutes.")
-        return []
-
-    _log(f"Correlating {len(rows)} observations from the last {since_minutes} min...")
-
-    counts_by_port_hour = {}
-    for row in rows:
-        try:
-            hour = datetime.fromisoformat(row["timestamp"]).strftime("%Y-%m-%dT%H")
-        except (TypeError, ValueError):
-            hour = "unknown"
-        key = (int(row.get("port", -1)), hour)
-        counts_by_port_hour[key] = counts_by_port_hour.get(key, 0) + 1
-
     events = []
-    for row in rows:
-        try:
-            hour = datetime.fromisoformat(row["timestamp"]).strftime("%Y-%m-%dT%H")
-        except (TypeError, ValueError):
-            hour = "unknown"
-        row["current_hour_count"] = counts_by_port_hour.get((int(row.get("port", -1)), hour), 0)
-        event = correlate_observation(row, baselines, port_profiles)
-        if event is not None:
-            events.append(event)
+
+    if not rows:
+        _log(f"No port observations in the last {since_minutes} minutes.")
+    else:
+        _log(f"Correlating {len(rows)} observations from the last {since_minutes} min...")
+        for row in rows:
+            event = correlate_observation(row, baselines, port_profiles)
+            if event is not None:
+                events.append(event)
+
+    # ── Cross-port pattern: vertical port-scan detection ───────────────────
+    # Runs independently of the per-port loop above — a scan signature is
+    # about one IP touching many ports, not any single observation.
+    scan_events = _correlate_scan_events(since_minutes)
+    events.extend(scan_events)
 
     confirmed = [e for e in events if e["confirmed"]]
     low_conf  = [e for e in events if not e["confirmed"]]
 
     _log(
-        f"Done. {len(rows)} observations → "
-        f"{len(confirmed)} confirmed threats, "
+        f"Done. {len(rows)} port observations + {len(scan_events)} scan-pattern "
+        f"check(s) → {len(confirmed)} confirmed threats, "
         f"{len(low_conf)} low-confidence events."
     )
 
@@ -434,17 +445,6 @@ def correlate_recent(since_minutes: int = 10) -> list[dict]:
 # =============================================================================
 
 def correlate_one(row: dict) -> dict | None:
-    """
-    Correlate a single observation dict without hitting SQLite.
-    Used by unit tests and direct alerter calls.
-
-    Parameters:
-        row : dict with keys matching port_observations schema:
-              {ip, port, protocol, state, service, version, timestamp}
-
-    Returns:
-        Threat event dict or None if observation is clean.
-    """
     baselines     = _load_baselines()
     port_profiles = load_profiles()
     return correlate_observation(row, baselines, port_profiles)

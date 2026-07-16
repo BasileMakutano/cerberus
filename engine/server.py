@@ -1,37 +1,3 @@
-"""
-Cerberus — engine/server.py
-Local control server. Serves the dashboard and exposes the full
-detection pipeline as HTTP endpoints so the operator never needs
-a terminal.
-
-Endpoints:
-    GET  /                       → dashboard/index.html
-    GET  /<path>                 → dashboard static assets
-    GET  /api/status             → engine + DB health
-    GET  /api/alerts             → logs/alerts.json contents
-    GET  /api/settings           → current settings (target IP, interval)
-    POST /api/settings           → save settings (writes target IP to nmap_scan.sh)
-    GET  /api/baselines          → models/baselines.json
-    GET  /api/profiles           → models/port_profiles.json
-    GET  /api/evaluation         → models/evaluation.json
-    GET  /api/db/ports           → port_observations summary from SQLite
-    GET  /api/db/stats           → SQLite table counts
-    GET  /api/logs/recon         → last 100 lines of logs/recon.log
-    GET  /api/logs/correlation   → last 100 lines of logs/correlation.log
-    POST /api/run/scan           → sudo bash scripts/nmap_scan.sh
-    POST /api/run/parser         → ingest_nmap_scans() + ingest_conn_logs()
-    POST /api/run/profiler       → build_all_profiles()
-    POST /api/run/baseline       → build_all_baselines()
-    POST /api/run/detector       → train_all() (slow — rebuilds all 26 models)
-    POST /api/run/correlator     → correlate_recent(since_minutes)
-    POST /api/run/alerter        → run_alert_cycle(since_minutes)
-    POST /api/run/full-cycle     → scan → parse → correlate → alert in sequence
-    DELETE /api/alerts           → wipe logs/alerts.json (reset dashboard)
-
-Run:
-    venv/bin/python3 engine/server.py
-    Then open: http://127.0.0.1:5000
-"""
 
 import sys
 import os
@@ -67,9 +33,7 @@ from engine.config import (
 from engine.db import BASE_DIR, get_db, get_stats
 from engine.alerter import acknowledge_alert
 
-# =============================================================================
 # PATHS
-# =============================================================================
 
 DASHBOARD_DIR = str(DASHBOARD_DIR)
 LOGS_DIR = str(LOGS_DIR)
@@ -99,10 +63,8 @@ def add_cors_headers(response):
         response.headers["Access-Control-Allow-Headers"] = "Content-Type"
     return response
 
-
-# =============================================================================
 # SETTINGS — persist target IP and scan interval
-# =============================================================================
+
 
 DEFAULT_SETTINGS = {
     "target_ip":       "192.168.100.100",
@@ -174,10 +136,7 @@ def validate_settings(data: dict) -> tuple[dict, dict]:
 
 
 def write_target_ip_to_script(ip: str) -> bool:
-    """
-    Permanently update TARGET= in scripts/nmap_scan.sh.
-    Replaces the line regardless of current value.
-    """
+
     if not os.path.exists(SCAN_SCRIPT):
         return False
     try:
@@ -193,10 +152,7 @@ def write_target_ip_to_script(ip: str) -> bool:
     except Exception:
         return False
 
-
-# =============================================================================
 # HELPERS
-# =============================================================================
 
 def _now_iso() -> str:
     return datetime.now(timezone.utc).isoformat()
@@ -284,9 +240,7 @@ def _run_scan() -> dict:
                 "timestamp": _now_iso(), "result_preview": ""}
 
 
-# =============================================================================
-# STATIC — dashboard
-# =============================================================================
+# dashboard
 
 @app.route("/")
 def serve_index():
@@ -305,9 +259,9 @@ def serve_alerts_file():
     return send_from_directory(LOGS_DIR, "alerts.json")
 
 
-# =============================================================================
-# API — STATUS + SETTINGS
-# =============================================================================
+
+# STATUS + SETTINGS
+
 
 @app.route("/api/status")
 def api_status():
@@ -362,10 +316,7 @@ def api_save_settings():
         "script_updated": script_updated,
     })
 
-
-# =============================================================================
 # API — DATA READS
-# =============================================================================
 
 @app.route("/api/alerts")
 def api_alerts():
@@ -448,9 +399,7 @@ def api_log_correlation():
     return jsonify({"log": _tail_log(CORR_LOG, 100)})
 
 
-# =============================================================================
-# API — PIPELINE TRIGGERS
-# =============================================================================
+# PIPELINE TRIGGERS
 
 @app.route("/api/run/scan", methods=["POST"])
 def api_run_scan():
@@ -557,9 +506,9 @@ def api_clear_alerts():
         return jsonify({"success": False, "error": str(e)}), 500
 
 
-# =============================================================================
+
 # ENTRY POINT
-# =============================================================================
+
 
 if __name__ == "__main__":
     print("=" * 50)

@@ -1,47 +1,3 @@
-"""
-Cerberus — engine/profiler.py
-
-Behavioural profiling engine. Reads live scan data from SQLite and
-builds a rich per-port behavioural profile for each of the 25 critical
-ports. This is the foundation of Layer 1 detection.
-
-What this module does:
-    Reads port_observations and connection_snapshots from recon.db
-    and computes behavioural metrics per port:
-
-        - Connection frequency (hourly mean, std, thresholds)
-        - Known IP addresses that legitimately connect to each port
-        - Expected service name and protocol
-        - Port presence consistency (how reliably open it is)
-        - Known processes and connection states
-        - First/last seen timestamps
-
-Why this matters:
-    Packet-level analysis (length, protocol encoding) tells you
-    what individual packets look like. Behavioural analysis tells
-    you how a port BEHAVES over time — which is what network
-    reconnaissance detection is fundamentally about.
-
-    An attacker scanning port 22 100 times in one minute looks
-    nothing like a legitimate SSH session. That is a behavioural
-    anomaly, not a packet anomaly.
-
-Output:
-    models/port_profiles.json — one entry per port
-
-This file is loaded by the correlator (Phase 6) alongside
-baselines.json to form the complete Layer 1 detection surface.
-
-Detection triggers this module enables:
-    1. Unknown port appearing (never in baseline)
-    2. Unknown IP connecting to a known port
-    3. Connection frequency spike above threshold
-    4. Wrong service running on a port (e.g. nginx on port 22)
-    5. Wrong protocol on a port (e.g. UDP on port 443)
-    6. New process using a port it has never used before
-    7. Port that was consistently open suddenly disappearing
-"""
-
 import sqlite3
 import json
 import os
@@ -65,17 +21,24 @@ CRITICAL_PORTS = [
     9200, 27017, 2181
 ]
 
+# ── Port-scan detection tuning ───────────────────────────────────────────────
+# Vertical scan = one source IP touching many distinct destination ports
+# within a short rolling window. These are separate from per-port baseline
+# checks — this is a cross-port aggregate pattern.
+SCAN_WINDOW_MINUTES = 5    # rolling window to count distinct ports in
+SCAN_PORT_THRESHOLD = 5    # distinct ports within window → SCAN_DETECTED
+
+# Local/self traffic that should never count toward a scan signature —
+# e.g. the dashboard's own control port, or addresses that are not real
+# remote peers (ss reports these on LISTEN rows with no actual remote peer).
+SCAN_IGNORE_REMOTES = {"0.0.0.0", "::", "127.0.0.1", "Address:Port", ""}
+
 
 # =============================================================================
 # DATABASE READS
 # =============================================================================
 
 def _get_db() -> sqlite3.Connection:
-    """
-    Open a read-only connection to recon.db.
-    Using URI with mode=ro prevents any accidental writes
-    from the profiler — it should only ever read.
-    """
     if not os.path.exists(DB_PATH):
         raise FileNotFoundError(
             f"recon.db not found at {DB_PATH}. "
@@ -88,11 +51,6 @@ def _get_db() -> sqlite3.Connection:
 
 
 def _load_port_observations(conn: sqlite3.Connection) -> list:
-    """
-    Load all open port observations ordered by timestamp.
-    We only care about open ports — closed/filtered ports
-    are not part of the normal behavioural baseline.
-    """
     cursor = conn.cursor()
     cursor.execute("""
         SELECT
@@ -111,11 +69,6 @@ def _load_port_observations(conn: sqlite3.Connection) -> list:
 
 
 def _load_connection_snapshots(conn: sqlite3.Connection) -> list:
-    """
-    Load all connection snapshots from ss output.
-    These give us process names, connection states, and
-    remote addresses that the nmap scan alone cannot provide.
-    """
     cursor = conn.cursor()
     cursor.execute("""
         SELECT
@@ -138,33 +91,7 @@ def _load_connection_snapshots(conn: sqlite3.Connection) -> list:
 # =============================================================================
 
 def _compute_hourly_frequency(timestamps: list) -> dict:
-    """
-    Compute hourly connection/observation frequency for a port.
 
-    Groups observations by hour bucket and counts how many
-    occurred in each hour. Returns statistical summary.
-
-    Why hourly buckets?
-        Finer granularity (per-minute) would be too noisy for
-        the amount of data we have. Coarser (per-day) would miss
-        intra-day attack patterns like port scans that happen in
-        bursts. Hourly is the right balance for a 5-minute
-        collection interval.
-
-    Parameters:
-        timestamps : list of ISO datetime strings
-
-    Returns:
-        {
-            "mean"   : float,  average observations per hour
-            "std"    : float,  standard deviation
-            "min"    : int,    quietest hour
-            "max"    : int,    busiest hour
-            "lower"  : float,  mean - 2σ (floor, min 0)
-            "upper"  : float,  mean + 2σ (spike threshold)
-            "hours_observed": int  number of distinct hours seen
-        }
-    """
     if not timestamps:
         return {}
 
@@ -208,27 +135,6 @@ def _build_port_profile(
     observations: list,
     connections:  list,
 ) -> dict:
-    """
-    Build a complete behavioural profile for one port.
-
-    Parameters:
-        port         : port number
-        observations : rows from port_observations for this port
-        connections  : rows from connection_snapshots for this port
-
-    Returns a profile dict containing:
-        - status and confidence
-        - known IPs, services, protocols, versions
-        - hourly frequency statistics and alert thresholds
-        - known processes and connection states
-        - first/last seen timestamps
-        - total observation count
-
-    Confidence levels:
-        HIGH   >= 100 observations across >= 10 hours
-        MEDIUM >= MIN_SCANS observations
-        LOW    < MIN_SCANS — profile not reliable, skip in correlator
-    """
     n = len(observations)
 
     if n < MIN_SCANS:
@@ -542,40 +448,6 @@ def load_profiles() -> dict:
 # =============================================================================
 
 def check_observation(observation: dict, profiles: dict) -> dict:
-    """
-    Layer 1 behavioural check for a single port observation.
-
-    This is called by the correlator for every new scan result.
-    It compares the observation against the known behavioural
-    profile and flags any deviation.
-
-    Parameters:
-        observation : dict with keys —
-            port, ip, service, protocol, version, timestamp
-        profiles    : loaded dict from load_profiles()
-
-    Returns:
-        {
-            "port"       : int,
-            "flagged"    : bool,
-            "severity"   : str,   HIGH / MEDIUM / LOW
-            "triggers"   : list,  which specific checks failed
-            "confidence" : str,   profile confidence level
-        }
-
-    Severity levels:
-        HIGH   — unknown port or wrong service (strong indicator)
-        MEDIUM — unknown IP or frequency spike (worth investigating)
-        LOW    — minor deviation (log but don't alert)
-
-    Trigger types:
-        UNKNOWN_PORT      — port not in any profile (never seen before)
-        UNKNOWN_IP        — IP not in known_ips for this port
-        WRONG_SERVICE     — service name doesn't match expected
-        WRONG_PROTOCOL    — protocol doesn't match expected
-        FREQUENCY_SPIKE   — connections exceed upper threshold
-        NEW_VERSION       — version string never seen before
-    """
     port     = int(observation.get("port", -1))
     ip       = str(observation.get("ip", "")).strip()
     service  = str(observation.get("service", "")).strip().lower()
@@ -663,38 +535,137 @@ def check_observation(observation: dict, profiles: dict) -> dict:
 
 
 def check_frequency(port: int, current_count: int, profiles: dict) -> dict:
-    """
-    Check if the current hourly connection count for a port
-    exceeds the upper threshold established in its profile.
-
-    Parameters:
-        port          : port number
-        current_count : number of connections seen in the current hour
-        profiles      : loaded dict from load_profiles()
-
-    Returns a trigger dict if spike detected, None otherwise.
-    This is called separately from check_observation because
-    frequency is computed at the session level, not per packet.
-    """
     profile = profiles.get(str(port))
     if not profile or profile.get("status") != "ok":
-        return None
-
+            return {
+            "flagged": False,
+            "triggers": [],
+            "severity": "LOW",
+            "confidence": "LOW"
+    }
     freq  = profile.get("scan_frequency", {})
     upper = freq.get("upper", None)
 
     if upper is None:
-        return None
+        return {
+        "flagged": False,
+        "triggers": [],
+        "severity": "LOW",
+        "confidence": "LOW"
+    }
 
     if current_count > upper:
         return {
-            "type":     "FREQUENCY_SPIKE",
-            "detail":   f"Connection count for port {port} exceeds threshold",
+        "flagged": True,
+        "triggers": [{
+            "type": "FREQUENCY_SPIKE",
+            "detail": f"Connection count for port {port} exceeds threshold",
             "expected": f"Upper threshold: {upper:.1f}/hr",
-            "observed": f"{current_count}/hr",
-        }
+            "observed": f"{current_count}/hr"
+        }],
+        "severity": "MEDIUM",
+        "confidence": profile.get("confidence", "LOW")
+    }
 
-    return None
+    return {
+    "flagged": False,
+    "triggers": [],
+    "severity": "LOW",
+    "confidence": profile.get("confidence", "LOW")
+}
+
+
+# =============================================================================
+# VERTICAL PORT-SCAN DETECTION  (Phase 6 correlator — cross-port pattern)
+# =============================================================================
+
+def detect_port_scan(
+    conn_rows:       list,
+    window_minutes:  int = SCAN_WINDOW_MINUTES,
+    port_threshold:  int = SCAN_PORT_THRESHOLD,
+    monitored_ports: set | None = None,
+) -> list:
+    if monitored_ports is None:
+        monitored_ports = set(CRITICAL_PORTS)
+
+    by_ip = defaultdict(list)
+
+    for row in conn_rows:
+        remote = str(row.get("remote_address") or "").strip()
+        if not remote or remote in SCAN_IGNORE_REMOTES:
+            continue
+
+        ts   = row.get("timestamp")
+        port = row.get("local_port")
+        if not ts or port is None:
+            continue
+
+        try:
+            port_int = int(port)
+        except (ValueError, TypeError):
+            continue
+
+        # Only count ports we actually monitor/expose. A local_port outside
+        # this set means WE initiated an outbound connection (ephemeral
+        # source port assigned by our own OS), not a remote host probing
+        # one of our services. Without this filter, our own outbound
+        # traffic to a single remote IP (e.g. the gateway, or a CDN) can
+        # rack up several "distinct ports" purely from ephemeral source
+        # ports and falsely look like that IP is scanning us.
+        if port_int not in monitored_ports:
+            continue
+
+        try:
+            dt = datetime.fromisoformat(ts)
+        except (ValueError, TypeError):
+            continue
+
+        by_ip[remote].append((dt, ts, port_int))
+
+    events = []
+
+    for ip, hits in by_ip.items():
+        hits.sort(key=lambda x: x[0])
+
+        window_start_dt = None
+        window_start_ts = None
+        ports_in_window  = set()
+        tripped          = False
+
+        for dt, ts, port in hits:
+            if window_start_dt is None:
+                window_start_dt = dt
+                window_start_ts = ts
+                ports_in_window = {port}
+                continue
+
+            if (dt - window_start_dt).total_seconds() <= window_minutes * 60:
+                ports_in_window.add(port)
+            else:
+                # Window expired — start a new one from this hit
+                window_start_dt = dt
+                window_start_ts = ts
+                ports_in_window = {port}
+
+            if len(ports_in_window) >= port_threshold:
+                events.append({
+                    "ip":         ip,
+                    "type":       "SCAN_DETECTED",
+                    "detail": (
+                        f"{len(ports_in_window)} distinct ports touched by "
+                        f"{ip} within {window_minutes} min "
+                        f"(window {window_start_ts} → {ts})"
+                    ),
+                    "ports":      sorted(ports_in_window),
+                    "window_end": ts,
+                })
+                tripped = True
+                break  # one event per IP per call is enough
+
+        if tripped:
+            continue
+
+    return events
 
 
 # =============================================================================

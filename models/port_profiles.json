@@ -2,313 +2,271 @@
   "21": {
     "port": 21,
     "status": "ok",
-    "confidence": "MEDIUM",
-    "total_observations": 76,
-    "first_seen": "2026-05-22T08:45:01",
-    "last_seen": "2026-07-04T20:15:01",
+    "confidence": "HIGH",
+    "total_observations": 747,
+    "first_seen": "2026-07-12T23:34:01",
+    "last_seen": "2026-07-16T11:08:01",
     "known_ips": {
       "list": [
-        "192.168.100.100",
-        "192.168.100.37"
+        "127.0.0.1"
       ],
-      "count": 2
+      "count": 1
     },
     "service": {
-      "expected": "ftp",
+      "expected": "http",
       "all_seen": {
-        "ftp": 69,
-        "tcpwrapped": 7
+        "http": 747
       },
       "versions": [
-        "vsftpd 2.3.4"
+        "SimpleHTTPServer 0.6"
       ]
     },
     "protocol": {
       "expected": "tcp",
       "all_seen": {
-        "tcp": 76
+        "tcp": 747
       }
     },
     "scan_frequency": {
-      "mean": 7.6,
-      "std": 4.2,
-      "min": 2,
-      "max": 12,
-      "lower": 0.0,
-      "upper": 16.0,
-      "hours_observed": 10
+      "mean": 24.0968,
+      "std": 9.6832,
+      "min": 5,
+      "max": 36,
+      "lower": 4.7303,
+      "upper": 43.4632,
+      "hours_observed": 31
     },
-    "connection_frequency": {},
+    "connection_frequency": {
+      "mean": 23.4815,
+      "std": 16.3217,
+      "min": 3,
+      "max": 88,
+      "lower": 0.0,
+      "upper": 56.1249,
+      "hours_observed": 27
+    },
     "connections": {
-      "known_processes": [],
-      "known_states": [],
-      "known_remote_ips": []
+      "known_processes": [
+        "python3"
+      ],
+      "known_states": [
+        "ESTAB",
+        "LISTEN"
+      ],
+      "known_remote_ips": [
+        "127.0.0.1"
+      ]
     },
     "presence": {
-      "rate": 0.6333,
-      "description": "intermittently open"
+      "rate": 1.0,
+      "description": "consistently open"
     }
   },
   "22": {
     "port": 22,
     "status": "ok",
     "confidence": "HIGH",
-    "total_observations": 484,
-    "first_seen": "2026-05-02T13:23:23",
-    "last_seen": "2026-07-04T20:15:01",
+    "total_observations": 800,
+    "first_seen": "2026-07-12T23:34:01",
+    "last_seen": "2026-07-16T21:15:03",
     "known_ips": {
       "list": [
-        "192.168.100.100",
-        "192.168.100.37",
-        "192.168.56.102"
+        "127.0.0.1"
       ],
-      "count": 3
+      "count": 1
     },
     "service": {
       "expected": "ssh",
       "all_seen": {
-        "ssh": 484
+        "ssh": 800
       },
       "versions": [
-        "OpenSSH 4.7p1 Debian 8ubuntu1",
-        "OpenSSH 9.6p1 Ubuntu 3ubuntu13.15",
+        "OpenSSH 10.2p1 Debian 6",
         "OpenSSH 9.6p1 Ubuntu 3ubuntu13.16"
       ]
     },
     "protocol": {
       "expected": "tcp",
       "all_seen": {
-        "tcp": 484
+        "tcp": 800
       }
     },
     "scan_frequency": {
-      "mean": 9.4902,
-      "std": 3.2682,
-      "min": 2,
-      "max": 13,
-      "lower": 2.9538,
-      "upper": 16.0266,
-      "hours_observed": 51
+      "mean": 23.5294,
+      "std": 10.2992,
+      "min": 1,
+      "max": 36,
+      "lower": 2.9311,
+      "upper": 44.1277,
+      "hours_observed": 34
     },
     "connection_frequency": {
-      "mean": 20.525,
-      "std": 6.8392,
-      "min": 2,
-      "max": 26,
-      "lower": 6.8466,
-      "upper": 34.2034,
-      "hours_observed": 80
+      "mean": 108.1071,
+      "std": 91.2236,
+      "min": 18,
+      "max": 505,
+      "lower": 0.0,
+      "upper": 290.5543,
+      "hours_observed": 28
     },
     "connections": {
       "known_processes": [
-        "sshd"
+        "sshd",
+        "systemd"
       ],
       "known_states": [
+        "ESTAB",
         "LISTEN"
       ],
       "known_remote_ips": [
-        "0.0.0.0:*",
-        "[::]:*"
+        "10.99.99.99",
+        "192.168.100.23",
+        "192.168.56.1",
+        "[::]"
       ]
     },
     "presence": {
-      "rate": 0.7908,
-      "description": "intermittently open"
+      "rate": 1.0,
+      "description": "consistently open"
     }
   },
   "23": {
     "port": 23,
-    "status": "ok",
-    "confidence": "MEDIUM",
-    "total_observations": 69,
-    "first_seen": "2026-07-04T14:15:01",
-    "last_seen": "2026-07-04T20:15:01",
-    "known_ips": {
-      "list": [
-        "192.168.100.37"
-      ],
-      "count": 1
-    },
-    "service": {
-      "expected": "telnet",
-      "all_seen": {
-        "telnet": 69
-      },
-      "versions": [
-        "Linux telnetd"
-      ]
-    },
-    "protocol": {
-      "expected": "tcp",
-      "all_seen": {
-        "tcp": 69
-      }
-    },
-    "scan_frequency": {
-      "mean": 9.8571,
-      "std": 2.85,
-      "min": 4,
-      "max": 12,
-      "lower": 4.1572,
-      "upper": 15.5571,
-      "hours_observed": 7
-    },
-    "connection_frequency": {},
-    "connections": {
-      "known_processes": [],
-      "known_states": [],
-      "known_remote_ips": []
-    },
-    "presence": {
-      "rate": 0.8214,
-      "description": "consistently open"
-    }
+    "status": "insufficient_data",
+    "total_observations": 0,
+    "confidence": "LOW",
+    "note": "Only 0 observations. Need at least 5 before this port has a reliable behavioural profile. Keep collecting data."
   },
   "25": {
     "port": 25,
     "status": "ok",
-    "confidence": "MEDIUM",
-    "total_observations": 69,
-    "first_seen": "2026-07-04T14:15:01",
-    "last_seen": "2026-07-04T20:15:01",
+    "confidence": "HIGH",
+    "total_observations": 747,
+    "first_seen": "2026-07-12T23:34:01",
+    "last_seen": "2026-07-16T11:08:01",
     "known_ips": {
       "list": [
-        "192.168.100.37"
+        "127.0.0.1"
       ],
       "count": 1
     },
     "service": {
       "expected": "smtp",
       "all_seen": {
-        "smtp": 69
+        "smtp": 744,
+        "tcpwrapped": 3
       },
-      "versions": [
-        "Postfix smtpd"
-      ]
+      "versions": []
     },
     "protocol": {
       "expected": "tcp",
       "all_seen": {
-        "tcp": 69
+        "tcp": 747
       }
     },
     "scan_frequency": {
-      "mean": 9.8571,
-      "std": 2.85,
-      "min": 4,
-      "max": 12,
-      "lower": 4.1572,
-      "upper": 15.5571,
-      "hours_observed": 7
+      "mean": 24.0968,
+      "std": 9.6832,
+      "min": 5,
+      "max": 36,
+      "lower": 4.7303,
+      "upper": 43.4632,
+      "hours_observed": 31
     },
-    "connection_frequency": {},
+    "connection_frequency": {
+      "mean": 23.3333,
+      "std": 15.8698,
+      "min": 3,
+      "max": 85,
+      "lower": 0.0,
+      "upper": 55.073,
+      "hours_observed": 27
+    },
     "connections": {
-      "known_processes": [],
-      "known_states": [],
-      "known_remote_ips": []
+      "known_processes": [
+        "nc"
+      ],
+      "known_states": [
+        "ESTAB",
+        "LISTEN"
+      ],
+      "known_remote_ips": [
+        "127.0.0.1"
+      ]
     },
     "presence": {
-      "rate": 0.8214,
+      "rate": 1.0,
       "description": "consistently open"
     }
   },
   "53": {
     "port": 53,
-    "status": "ok",
-    "confidence": "MEDIUM",
-    "total_observations": 69,
-    "first_seen": "2026-07-04T14:15:01",
-    "last_seen": "2026-07-04T20:15:01",
-    "known_ips": {
-      "list": [
-        "192.168.100.37"
-      ],
-      "count": 1
-    },
-    "service": {
-      "expected": "domain",
-      "all_seen": {
-        "domain": 69
-      },
-      "versions": [
-        "ISC BIND 9.4.2"
-      ]
-    },
-    "protocol": {
-      "expected": "tcp",
-      "all_seen": {
-        "tcp": 69
-      }
-    },
-    "scan_frequency": {
-      "mean": 9.8571,
-      "std": 2.85,
-      "min": 4,
-      "max": 12,
-      "lower": 4.1572,
-      "upper": 15.5571,
-      "hours_observed": 7
-    },
-    "connection_frequency": {},
-    "connections": {
-      "known_processes": [],
-      "known_states": [],
-      "known_remote_ips": []
-    },
-    "presence": {
-      "rate": 0.8214,
-      "description": "consistently open"
-    }
+    "status": "insufficient_data",
+    "total_observations": 0,
+    "confidence": "LOW",
+    "note": "Only 0 observations. Need at least 5 before this port has a reliable behavioural profile. Keep collecting data."
   },
   "80": {
     "port": 80,
     "status": "ok",
     "confidence": "HIGH",
-    "total_observations": 396,
-    "first_seen": "2026-05-02T13:35:01",
-    "last_seen": "2026-07-04T20:15:01",
+    "total_observations": 747,
+    "first_seen": "2026-07-12T23:34:01",
+    "last_seen": "2026-07-16T11:08:01",
     "known_ips": {
       "list": [
-        "192.168.100.100",
-        "192.168.100.37"
+        "127.0.0.1"
       ],
-      "count": 2
+      "count": 1
     },
     "service": {
       "expected": "http",
       "all_seen": {
-        "http": 396
+        "http": 747
       },
       "versions": [
-        "Apache httpd 2.2.8",
-        "Apache httpd 2.4.58",
-        "GoAhead WebServer"
+        "SimpleHTTPServer 0.6"
       ]
     },
     "protocol": {
       "expected": "tcp",
       "all_seen": {
-        "tcp": 396
+        "tcp": 747
       }
     },
     "scan_frequency": {
-      "mean": 8.8,
-      "std": 3.7748,
-      "min": 1,
-      "max": 13,
-      "lower": 1.2505,
-      "upper": 16.3495,
-      "hours_observed": 45
+      "mean": 24.0968,
+      "std": 9.6832,
+      "min": 5,
+      "max": 36,
+      "lower": 4.7303,
+      "upper": 43.4632,
+      "hours_observed": 31
     },
-    "connection_frequency": {},
+    "connection_frequency": {
+      "mean": 23.4815,
+      "std": 16.3217,
+      "min": 3,
+      "max": 88,
+      "lower": 0.0,
+      "upper": 56.1249,
+      "hours_observed": 27
+    },
     "connections": {
-      "known_processes": [],
-      "known_states": [],
-      "known_remote_ips": []
+      "known_processes": [
+        "python3"
+      ],
+      "known_states": [
+        "ESTAB",
+        "LISTEN"
+      ],
+      "known_remote_ips": [
+        "127.0.0.1"
+      ]
     },
     "presence": {
-      "rate": 0.7333,
-      "description": "intermittently open"
+      "rate": 1.0,
+      "description": "consistently open"
     }
   },
   "110": {
@@ -328,48 +286,65 @@
   "139": {
     "port": 139,
     "status": "ok",
-    "confidence": "MEDIUM",
-    "total_observations": 69,
-    "first_seen": "2026-07-04T14:15:01",
-    "last_seen": "2026-07-04T20:15:01",
+    "confidence": "HIGH",
+    "total_observations": 798,
+    "first_seen": "2026-07-12T23:34:01",
+    "last_seen": "2026-07-16T11:08:01",
     "known_ips": {
       "list": [
-        "192.168.100.37"
+        "127.0.0.1"
       ],
       "count": 1
     },
     "service": {
       "expected": "netbios-ssn",
       "all_seen": {
-        "netbios-ssn": 69
+        "netbios-ssn": 798
       },
       "versions": [
-        "Samba smbd 3.X - 4.X"
+        "Samba smbd 4.6.2"
       ]
     },
     "protocol": {
       "expected": "tcp",
       "all_seen": {
-        "tcp": 69
+        "tcp": 798
       }
     },
     "scan_frequency": {
-      "mean": 9.8571,
-      "std": 2.85,
-      "min": 4,
-      "max": 12,
-      "lower": 4.1572,
-      "upper": 15.5571,
-      "hours_observed": 7
+      "mean": 24.9375,
+      "std": 8.888,
+      "min": 5,
+      "max": 36,
+      "lower": 7.1616,
+      "upper": 42.7134,
+      "hours_observed": 32
     },
-    "connection_frequency": {},
+    "connection_frequency": {
+      "mean": 48.9643,
+      "std": 31.1992,
+      "min": 6,
+      "max": 176,
+      "lower": 0.0,
+      "upper": 111.3627,
+      "hours_observed": 28
+    },
     "connections": {
-      "known_processes": [],
-      "known_states": [],
-      "known_remote_ips": []
+      "known_processes": [
+        "smbd",
+        "smbd[127.0.0.1]"
+      ],
+      "known_states": [
+        "ESTAB",
+        "LISTEN"
+      ],
+      "known_remote_ips": [
+        "127.0.0.1",
+        "[::]"
+      ]
     },
     "presence": {
-      "rate": 0.8214,
+      "rate": 1.0,
       "description": "consistently open"
     }
   },
@@ -383,98 +358,128 @@
   "443": {
     "port": 443,
     "status": "ok",
-    "confidence": "MEDIUM",
-    "total_observations": 15,
-    "first_seen": "2026-05-13T12:05:01",
-    "last_seen": "2026-06-16T10:50:01",
+    "confidence": "HIGH",
+    "total_observations": 747,
+    "first_seen": "2026-07-12T23:34:01",
+    "last_seen": "2026-07-16T11:08:01",
     "known_ips": {
       "list": [
-        "192.168.100.100"
+        "127.0.0.1"
       ],
       "count": 1
     },
     "service": {
       "expected": "http",
       "all_seen": {
-        "http": 8,
-        "https": 6,
-        "tcpwrapped": 1
+        "http": 747
       },
       "versions": [
-        "GoAhead WebServer"
+        "SimpleHTTPServer 0.6"
       ]
     },
     "protocol": {
       "expected": "tcp",
       "all_seen": {
-        "tcp": 15
+        "tcp": 747
       }
     },
     "scan_frequency": {
-      "mean": 3.0,
-      "std": 2.5298,
-      "min": 1,
-      "max": 8,
-      "lower": 0.0,
-      "upper": 8.0596,
-      "hours_observed": 5
+      "mean": 24.0968,
+      "std": 9.6832,
+      "min": 5,
+      "max": 36,
+      "lower": 4.7303,
+      "upper": 43.4632,
+      "hours_observed": 31
     },
-    "connection_frequency": {},
+    "connection_frequency": {
+      "mean": 23.8148,
+      "std": 17.3867,
+      "min": 3,
+      "max": 95,
+      "lower": 0.0,
+      "upper": 58.5883,
+      "hours_observed": 27
+    },
     "connections": {
-      "known_processes": [],
-      "known_states": [],
-      "known_remote_ips": []
+      "known_processes": [
+        "python3"
+      ],
+      "known_states": [
+        "ESTAB",
+        "LISTEN"
+      ],
+      "known_remote_ips": [
+        "127.0.0.1"
+      ]
     },
     "presence": {
-      "rate": 0.25,
-      "description": "rarely open"
+      "rate": 1.0,
+      "description": "consistently open"
     }
   },
   "445": {
     "port": 445,
     "status": "ok",
-    "confidence": "MEDIUM",
-    "total_observations": 69,
-    "first_seen": "2026-07-04T14:15:01",
-    "last_seen": "2026-07-04T20:15:01",
+    "confidence": "HIGH",
+    "total_observations": 798,
+    "first_seen": "2026-07-12T23:34:01",
+    "last_seen": "2026-07-16T11:08:01",
     "known_ips": {
       "list": [
-        "192.168.100.37"
+        "127.0.0.1"
       ],
       "count": 1
     },
     "service": {
       "expected": "netbios-ssn",
       "all_seen": {
-        "netbios-ssn": 69
+        "netbios-ssn": 798
       },
       "versions": [
-        "Samba smbd 3.X - 4.X"
+        "Samba smbd 4.6.2"
       ]
     },
     "protocol": {
       "expected": "tcp",
       "all_seen": {
-        "tcp": 69
+        "tcp": 798
       }
     },
     "scan_frequency": {
-      "mean": 9.8571,
-      "std": 2.85,
-      "min": 4,
-      "max": 12,
-      "lower": 4.1572,
-      "upper": 15.5571,
-      "hours_observed": 7
+      "mean": 24.9375,
+      "std": 8.888,
+      "min": 5,
+      "max": 36,
+      "lower": 7.1616,
+      "upper": 42.7134,
+      "hours_observed": 32
     },
-    "connection_frequency": {},
+    "connection_frequency": {
+      "mean": 48.75,
+      "std": 30.6042,
+      "min": 6,
+      "max": 172,
+      "lower": 0.0,
+      "upper": 109.9584,
+      "hours_observed": 28
+    },
     "connections": {
-      "known_processes": [],
-      "known_states": [],
-      "known_remote_ips": []
+      "known_processes": [
+        "smbd",
+        "smbd[127.0.0.1]"
+      ],
+      "known_states": [
+        "ESTAB",
+        "LISTEN"
+      ],
+      "known_remote_ips": [
+        "127.0.0.1",
+        "[::]"
+      ]
     },
     "presence": {
-      "rate": 0.8214,
+      "rate": 1.0,
       "description": "consistently open"
     }
   },
@@ -502,48 +507,60 @@
   "3306": {
     "port": 3306,
     "status": "ok",
-    "confidence": "MEDIUM",
-    "total_observations": 69,
-    "first_seen": "2026-07-04T14:15:01",
-    "last_seen": "2026-07-04T20:15:01",
+    "confidence": "HIGH",
+    "total_observations": 798,
+    "first_seen": "2026-07-12T23:34:01",
+    "last_seen": "2026-07-16T11:08:01",
     "known_ips": {
       "list": [
-        "192.168.100.37"
+        "127.0.0.1"
       ],
       "count": 1
     },
     "service": {
       "expected": "mysql",
       "all_seen": {
-        "mysql": 69
+        "mysql": 798
       },
       "versions": [
-        "MySQL 5.0.51a-3ubuntu5"
+        "MySQL 8.0.46-0ubuntu0.24.04.3"
       ]
     },
     "protocol": {
       "expected": "tcp",
       "all_seen": {
-        "tcp": 69
+        "tcp": 798
       }
     },
     "scan_frequency": {
-      "mean": 9.8571,
-      "std": 2.85,
-      "min": 4,
-      "max": 12,
-      "lower": 4.1572,
-      "upper": 15.5571,
-      "hours_observed": 7
+      "mean": 24.9375,
+      "std": 8.888,
+      "min": 5,
+      "max": 36,
+      "lower": 7.1616,
+      "upper": 42.7134,
+      "hours_observed": 32
     },
-    "connection_frequency": {},
+    "connection_frequency": {
+      "mean": 24.2857,
+      "std": 15.0092,
+      "min": 3,
+      "max": 84,
+      "lower": 0.0,
+      "upper": 54.3041,
+      "hours_observed": 28
+    },
     "connections": {
-      "known_processes": [],
-      "known_states": [],
+      "known_processes": [
+        "mysqld"
+      ],
+      "known_states": [
+        "LISTEN"
+      ],
       "known_remote_ips": []
     },
     "presence": {
-      "rate": 0.8214,
+      "rate": 1.0,
       "description": "consistently open"
     }
   },
@@ -556,99 +573,17 @@
   },
   "5432": {
     "port": 5432,
-    "status": "ok",
-    "confidence": "MEDIUM",
-    "total_observations": 69,
-    "first_seen": "2026-07-04T14:15:01",
-    "last_seen": "2026-07-04T20:15:01",
-    "known_ips": {
-      "list": [
-        "192.168.100.37"
-      ],
-      "count": 1
-    },
-    "service": {
-      "expected": "postgresql",
-      "all_seen": {
-        "postgresql": 69
-      },
-      "versions": [
-        "PostgreSQL DB 8.3.0 - 8.3.7"
-      ]
-    },
-    "protocol": {
-      "expected": "tcp",
-      "all_seen": {
-        "tcp": 69
-      }
-    },
-    "scan_frequency": {
-      "mean": 9.8571,
-      "std": 2.85,
-      "min": 4,
-      "max": 12,
-      "lower": 4.1572,
-      "upper": 15.5571,
-      "hours_observed": 7
-    },
-    "connection_frequency": {},
-    "connections": {
-      "known_processes": [],
-      "known_states": [],
-      "known_remote_ips": []
-    },
-    "presence": {
-      "rate": 0.8214,
-      "description": "consistently open"
-    }
+    "status": "insufficient_data",
+    "total_observations": 0,
+    "confidence": "LOW",
+    "note": "Only 0 observations. Need at least 5 before this port has a reliable behavioural profile. Keep collecting data."
   },
   "5900": {
     "port": 5900,
-    "status": "ok",
-    "confidence": "MEDIUM",
-    "total_observations": 69,
-    "first_seen": "2026-07-04T14:15:01",
-    "last_seen": "2026-07-04T20:15:01",
-    "known_ips": {
-      "list": [
-        "192.168.100.37"
-      ],
-      "count": 1
-    },
-    "service": {
-      "expected": "vnc",
-      "all_seen": {
-        "vnc": 69
-      },
-      "versions": [
-        "VNC"
-      ]
-    },
-    "protocol": {
-      "expected": "tcp",
-      "all_seen": {
-        "tcp": 69
-      }
-    },
-    "scan_frequency": {
-      "mean": 9.8571,
-      "std": 2.85,
-      "min": 4,
-      "max": 12,
-      "lower": 4.1572,
-      "upper": 15.5571,
-      "hours_observed": 7
-    },
-    "connection_frequency": {},
-    "connections": {
-      "known_processes": [],
-      "known_states": [],
-      "known_remote_ips": []
-    },
-    "presence": {
-      "rate": 0.8214,
-      "description": "consistently open"
-    }
+    "status": "insufficient_data",
+    "total_observations": 4,
+    "confidence": "LOW",
+    "note": "Only 4 observations. Need at least 5 before this port has a reliable behavioural profile. Keep collecting data."
   },
   "6379": {
     "port": 6379,
@@ -660,50 +595,64 @@
   "8080": {
     "port": 8080,
     "status": "ok",
-    "confidence": "MEDIUM",
-    "total_observations": 24,
-    "first_seen": "2026-05-13T12:05:01",
-    "last_seen": "2026-06-16T10:50:01",
+    "confidence": "HIGH",
+    "total_observations": 747,
+    "first_seen": "2026-07-12T23:34:01",
+    "last_seen": "2026-07-16T11:08:01",
     "known_ips": {
       "list": [
-        "192.168.100.100"
+        "127.0.0.1"
       ],
       "count": 1
     },
     "service": {
       "expected": "http",
       "all_seen": {
-        "http": 16,
-        "http-proxy": 8
+        "http": 747
       },
       "versions": [
-        "GoAhead WebServer"
+        "SimpleHTTPServer 0.6"
       ]
     },
     "protocol": {
       "expected": "tcp",
       "all_seen": {
-        "tcp": 24
+        "tcp": 747
       }
     },
     "scan_frequency": {
-      "mean": 4.0,
-      "std": 3.1091,
-      "min": 1,
-      "max": 10,
-      "lower": 0.0,
-      "upper": 10.2183,
-      "hours_observed": 6
+      "mean": 24.0968,
+      "std": 9.6832,
+      "min": 5,
+      "max": 36,
+      "lower": 4.7303,
+      "upper": 43.4632,
+      "hours_observed": 31
     },
-    "connection_frequency": {},
+    "connection_frequency": {
+      "mean": 23.4815,
+      "std": 16.3217,
+      "min": 3,
+      "max": 88,
+      "lower": 0.0,
+      "upper": 56.1249,
+      "hours_observed": 27
+    },
     "connections": {
-      "known_processes": [],
-      "known_states": [],
-      "known_remote_ips": []
+      "known_processes": [
+        "python3"
+      ],
+      "known_states": [
+        "ESTAB",
+        "LISTEN"
+      ],
+      "known_remote_ips": [
+        "127.0.0.1"
+      ]
     },
     "presence": {
-      "rate": 0.3333,
-      "description": "intermittently open"
+      "rate": 1.0,
+      "description": "consistently open"
     }
   },
   "8443": {
@@ -715,10 +664,66 @@
   },
   "8888": {
     "port": 8888,
-    "status": "insufficient_data",
-    "total_observations": 0,
-    "confidence": "LOW",
-    "note": "Only 0 observations. Need at least 5 before this port has a reliable behavioural profile. Keep collecting data."
+    "status": "ok",
+    "confidence": "HIGH",
+    "total_observations": 747,
+    "first_seen": "2026-07-12T23:34:01",
+    "last_seen": "2026-07-16T11:08:01",
+    "known_ips": {
+      "list": [
+        "127.0.0.1"
+      ],
+      "count": 1
+    },
+    "service": {
+      "expected": "http",
+      "all_seen": {
+        "http": 747
+      },
+      "versions": [
+        "SimpleHTTPServer 0.6"
+      ]
+    },
+    "protocol": {
+      "expected": "tcp",
+      "all_seen": {
+        "tcp": 747
+      }
+    },
+    "scan_frequency": {
+      "mean": 24.0968,
+      "std": 9.6832,
+      "min": 5,
+      "max": 36,
+      "lower": 4.7303,
+      "upper": 43.4632,
+      "hours_observed": 31
+    },
+    "connection_frequency": {
+      "mean": 23.4815,
+      "std": 16.3217,
+      "min": 3,
+      "max": 88,
+      "lower": 0.0,
+      "upper": 56.1249,
+      "hours_observed": 27
+    },
+    "connections": {
+      "known_processes": [
+        "python3"
+      ],
+      "known_states": [
+        "ESTAB",
+        "LISTEN"
+      ],
+      "known_remote_ips": [
+        "127.0.0.1"
+      ]
+    },
+    "presence": {
+      "rate": 1.0,
+      "description": "consistently open"
+    }
   },
   "9200": {
     "port": 9200,

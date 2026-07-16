@@ -361,7 +361,9 @@ function buildAlertRow(a) {
 
 function buildAlertRowFull(a) {
   const score = a.layer2_score != null ? a.layer2_score.toFixed(4) : 'NO MODEL';
-  return `<tr>
+  const rowId = 'rec-' + a.alert_id;
+  const rec   = a.recommendation || '—';
+  return `<tr onclick="toggleRec('${rowId}')" style="cursor:pointer">
     <td><span class="sev-badge sev-${a.severity}">${a.severity}</span></td>
     <td><span class="port-mono">:${a.port}</span></td>
     <td><span style="font-family:var(--mono);font-size:.7rem;color:var(--text-sec)">${a.ip||'—'}</span></td>
@@ -372,8 +374,21 @@ function buildAlertRowFull(a) {
       : '<span style="font-family:var(--mono);font-size:.6rem;color:var(--text-dim)">L1 only</span>'}</td>
     <td><span class="ts-text">${fmtTime(a.timestamp)}</span></td>
     <td><button class="ack-btn ${a.acknowledged?'done':''}"
-          onclick="ackAlert('${a.alert_id}',this)">${a.acknowledged?'✓':'Ack'}</button></td>
+          onclick="event.stopPropagation();ackAlert('${a.alert_id}',this)">${a.acknowledged?'✓':'Ack'}</button></td>
+  </tr>
+  <tr id="${rowId}" style="display:none">
+    <td colspan="8" style="padding:.6rem 1rem;background:var(--bg-card);border-bottom:1px solid var(--border-dim)">
+      <span style="font-size:.6rem;letter-spacing:.1em;text-transform:uppercase;color:var(--accent);font-family:var(--mono)">
+        ▶ Proposed Solution
+      </span>
+      <div style="margin-top:.4rem;font-size:.75rem;color:var(--text-sec);line-height:1.7">${esc(rec)}</div>
+    </td>
   </tr>`;
+}
+
+function toggleRec(id) {
+  const el = document.getElementById(id);
+  if (el) el.style.display = el.style.display === 'none' ? '' : 'none';
 }
 
 function setAlertFilter(f) { alertFilter = f; alertPage = 1; renderAlertsView(); }
@@ -715,7 +730,7 @@ async function renderSettingsView() {
             <div class="field-label">Scan Interval (minutes)</div>
             <input class="field-input" id="setScanInterval" type="number" min="1" max="60"
                    value="${s.scan_interval||5}">
-            <div class="field-hint">Saved for future cron setup runs; existing cron jobs keep their current schedule.</div>
+            <div class="field-hint">How often the dashboard-triggered full cycle runs. Cron interval is set separately.</div>
           </div>
 
           <div class="field-group">
@@ -803,10 +818,9 @@ async function saveSettings() {
         ? '✓ Saved — target IP written to nmap_scan.sh'
         : '✓ Settings saved';
       fb.style.color = 'var(--low)';
-      document.getElementById('targetPill').textContent = 'Target: ' + settings.target_ip;
+      document.getElementById('targetPill').textContent = 'Target: ' + payload.target_ip;
     } else {
-      const details = d.fields ? ' — ' + Object.values(d.fields).join(' ') : '';
-      fb.textContent = '✗ Save failed: ' + (d.error||'unknown error') + details;
+      fb.textContent = '✗ Save failed: ' + (d.error||'unknown error');
       fb.style.color = 'var(--high)';
     }
   } catch(e) {
@@ -817,30 +831,26 @@ async function saveSettings() {
 
 // ── Shared helpers ────────────────────────────────────────────────────────────
 async function ackAlert(id, btn) {
-  const a = allAlerts.find(x => x.alert_id === id);
-  if (!a || a.acknowledged) return;
-
-  const previous = btn.textContent;
-  btn.textContent = '…';
-  btn.disabled = true;
-
   try {
-    const r = await fetch(`${API}/api/alerts/${encodeURIComponent(id)}/ack`, {
-      method:'PATCH',
-      headers:{'Content-Type':'application/json'},
-      body: JSON.stringify({acknowledged:true})
+    await fetch(`/api/alerts/${id}/ack`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ acknowledged: true })
     });
-    const d = await r.json();
-    if (!r.ok || !d.success) throw new Error(d.error || 'Ack failed');
-    a.acknowledged = true;
+
+    const a = allAlerts.find(x => x.alert_id === id);
+
+    if (a) {
+      a.acknowledged = true;
+    }
+
     btn.textContent = '✓';
     btn.classList.add('done');
+
     updateBadge();
-  } catch(e) {
-    btn.textContent = previous;
-    consolePrint?.([`[!] Could not acknowledge alert: ${e.message}`]);
-  } finally {
-    btn.disabled = false;
+
+  } catch(err) {
+    console.error(err);
   }
 }
 
@@ -853,6 +863,7 @@ function describeAlert(a) {
     FREQUENCY_SPIKE: `${svc} traffic spike above baseline`,
     WRONG_PROTOCOL:  `Protocol mismatch on ${svc}`,
     NEW_VERSION:     `New version detected on ${svc}`,
+    UNKNOWN_REMOTE_IP: `Unrecognised host connected to ${svc}`,
   }[a.layer1_trigger] || `Anomaly on ${svc} — ${a.layer1_trigger}`;
 }
 

@@ -8,8 +8,8 @@
     "precision": 0.9997,
     "recall": 1.0,
     "f1_score": 0.9999,
-    "mean_score_normal": -0.4924,
-    "mean_score_malicious": -0.5811
+    "mean_score_normal": -0.4916,
+    "mean_score_malicious": -0.583
   },
   "21": {
     "port": 21,
